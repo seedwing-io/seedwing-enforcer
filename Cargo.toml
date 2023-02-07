@@ -20,6 +20,9 @@ tokio-util = { version = "0.7.4", features = ["rt"] }
 tower-lsp = { version = "0.18.0" }
 url = "2.3.1"
 walkdir = "2"
+cyclonedx-bom = "0.4.0"
+
+roxmltree = "0.18.0"
 
 seedwing-policy-engine = "0.1.0-alpha.2"
 

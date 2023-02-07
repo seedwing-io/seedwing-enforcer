@@ -16,21 +16,17 @@
   },
   "enabledApiProposals": [],
   "activationEvents": [
-    "onLanguage:seedwing-pom",
     "workspaceContains:**/.enforcer.yaml"
   ],
   "main": "./dist/extension.js",
   "contributes": {
     "languages": [
       {
-        "id": "seedwing-pom",
-        "filenames": [
-          "pom.xml"
-        ]
-      },
-      {
-        "id": "enforcer-config",
-        "filenames": [ ".enforcer.yaml" ]
+        "id": "seedwing-dog",
+        "extensions": [
+          ".dog"
+        ],
+        "configuration": "./language-configuration.json"
       }
     ],
     "configuration": {
@@ -54,6 +50,14 @@
           "description": "Traces the communication between VS Code and the language server."
         }
       }
+    },
+    "views": {
+      "explorer": [
+        {
+          "id": "seedwing-enforcer.dependencies",
+          "name": "Discovered Dependencies"
+        }
+      ]
     }
   },
   "scripts": {
@@ -87,9 +91,11 @@
     "glob": "^7.2.3",
     "mocha": "^8.4.0",
     "typescript": "^4.9.4",
-    "vscode-uri": "^3.0.7"
+    "vscode-uri": "^3.0.7",
+    "js-yaml": "^4.1.0"
   },
   "dependencies": {
-    "vscode-languageclient": "^8.0.2"
+    "vscode-languageclient": "^8.0.2",
+    "packageurl-js": "^1.0.0"
   }
 }

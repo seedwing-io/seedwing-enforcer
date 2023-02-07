@@ -3,16 +3,20 @@
 //! Project: An actual project that we want to work with. Found in the root- or sub-folder.
 
 use crate::backend::workspace::Workspace;
-use tower_lsp::jsonrpc::Result;
+use std::cell::Cell;
+use std::sync::Mutex;
+use tower_lsp::jsonrpc::{Error, ErrorCode, Result};
 use tower_lsp::lsp_types::*;
 use tower_lsp::{Client, LanguageServer};
 
+mod notification;
 mod project;
 mod workspace;
 
 pub struct Backend {
     pub client: Client,
     workspace: Workspace,
+    initial_folders: Mutex<Cell<Option<Vec<WorkspaceFolder>>>>,
 }
 
 #[tower_lsp::async_trait]
@@ -20,18 +24,24 @@ impl LanguageServer for Backend {
     async fn initialize(&self, params: InitializeParams) -> Result<InitializeResult> {
         log::info!("Workspaces: {:?}", params.workspace_folders);
 
-        if let Some(folders) = params.workspace_folders {
-            self.workspace.folders_changed(folders, vec![]).await;
-        }
+        // remember how we got initialized, unfortunately we cannot set it up yet, as we can't
+        // send notification before the `initialized` function got called.
+
+        self.initial_folders
+            .lock()
+            .unwrap()
+            .set(params.workspace_folders);
 
         Ok(InitializeResult {
-            server_info: None,
+            server_info: Some(ServerInfo {
+                name: "Seedwing Enforcer".to_string(),
+                ..Default::default()
+            }),
             capabilities: ServerCapabilities {
                 text_document_sync: Some(TextDocumentSyncCapability::Options(
                     TextDocumentSyncOptions {
                         save: Some(TextDocumentSyncSaveOptions::Supported(true)),
                         change: Some(TextDocumentSyncKind::NONE),
-                        open_close: Some(true),
                         ..Default::default()
                     },
                 )),
@@ -42,10 +52,20 @@ impl LanguageServer for Backend {
                     }),
                     file_operations: None,
                 }),
+                code_lens_provider: Some(CodeLensOptions {
+                    resolve_provider: Some(false),
+                }),
                 // definition: Some(GotoCapability::default()),
                 ..ServerCapabilities::default()
             },
         })
+    }
+
+    async fn initialized(&self, _params: InitializedParams) {
+        let folders = self.initial_folders.lock().unwrap().replace(None);
+        if let Some(folders) = folders {
+            self.workspace.folders_changed(folders, vec![]).await;
+        }
     }
 
     async fn shutdown(&self) -> Result<()> {
@@ -71,11 +91,35 @@ impl LanguageServer for Backend {
     async fn did_save(&self, _: DidSaveTextDocumentParams) {
         // TODO: we might want to notify the project now
     }
+
+    async fn code_lens(&self, params: CodeLensParams) -> Result<Option<Vec<CodeLens>>> {
+        log::info!("Code lens: {params:?}");
+
+        let result = self
+            .workspace
+            .code_lens(&params.text_document.uri)
+            .await
+            .map_err(|err| Error {
+                code: ErrorCode::InternalError,
+                message: err.to_string(),
+                data: None,
+            })?;
+
+        Ok(if result.is_empty() {
+            None
+        } else {
+            Some(result)
+        })
+    }
 }
 
 impl Backend {
     pub fn new(client: Client) -> Self {
         let workspace = Workspace::new(client.clone());
-        Self { client, workspace }
+        Self {
+            client,
+            workspace,
+            initial_folders: Default::default(),
+        }
     }
 }

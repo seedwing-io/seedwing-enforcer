@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tokio_util::task::LocalPoolHandle;
-use tower_lsp::lsp_types::WorkspaceFolder;
+use tower_lsp::lsp_types::{CodeLens, WorkspaceFolder};
 use tower_lsp::Client;
 use url::Url;
 
@@ -43,6 +43,10 @@ impl Workspace {
 
     pub async fn changed(&self, path: &Url) {
         self.inner.write().await.changed(path).await;
+    }
+
+    pub async fn code_lens(&self, path: &Url) -> anyhow::Result<Vec<CodeLens>> {
+        self.inner.read().await.code_lens(path).await
     }
 }
 
@@ -93,6 +97,20 @@ impl Inner {
             }
         }
     }
+
+    pub async fn code_lens(&self, path: &Url) -> anyhow::Result<Vec<CodeLens>> {
+        let mut result = vec![];
+
+        if let Some(path) = as_path(path) {
+            for (root, folder) in &self.folders {
+                if path.starts_with(root) {
+                    result.extend(folder.code_lens(path).await?);
+                }
+            }
+        }
+
+        Ok(result)
+    }
 }
 
 /// A workspace folder
@@ -136,7 +154,7 @@ impl Folder {
 
         for (k, v) in &mut self.projects {
             if path.starts_with(k) {
-                if !Project::has_marker(&k) {
+                if !Project::has_marker(k) {
                     // drop
                     to_remove.push(k.to_path_buf());
                 } else {
@@ -170,5 +188,15 @@ impl Folder {
                 // just a change
             }
         }
+    }
+
+    pub async fn code_lens(&self, path: &Path) -> anyhow::Result<Vec<CodeLens>> {
+        let mut result = vec![];
+        for (k, v) in &self.projects {
+            if path.starts_with(k) {
+                result.extend(v.code_lens(path).await?);
+            }
+        }
+        Ok(result)
     }
 }

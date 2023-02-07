@@ -9,6 +9,8 @@ import {
   window,
 } from "vscode";
 
+import * as vscode from "vscode";
+
 import {
   Executable,
   LanguageClient,
@@ -16,9 +18,27 @@ import {
   ServerOptions,
 } from "vscode-languageclient/node";
 
+import {
+  EnforcerDependenciesProvider
+} from "./deps";
+
+import {SeedwingReport, UpdatedDependencies} from "./data";
+import { Report } from "./report";
+
 let client: LanguageClient;
 
-export async function activate(context: ExtensionContext) {
+export async function activate(context: ExtensionContext): Promise<void> {
+
+  // register report view
+
+  context.subscriptions.push(
+      vscode.commands.registerCommand("seedwingEnforcer.showReport", (reports: SeedwingReport[]) => {
+          new Report(context.extensionUri, reports);
+      })
+  );
+
+  // LSP
+
   const traceOutputChannel = window.createOutputChannel("Seedwing Enforcer Language Server trace");
   const command = process.env.SERVER_PATH || "seedwing-enforcer-lsp";
   const run: Executable = {
@@ -35,14 +55,11 @@ export async function activate(context: ExtensionContext) {
     run,
     debug: run,
   };
-  // If the extension is launched in debug mode then the debug server options are used
-  // Otherwise the run options are used
-  // Options to control the language client
-  let clientOptions: LanguageClientOptions = {
+
+  const clientOptions: LanguageClientOptions = {
     documentSelector: [
-      { scheme: "file", language: "seedwing-pom" },
-      { scheme: "file", language: "enforcer-config" },
-      { pattern: "pom.xml" }
+      { scheme: "file", pattern: "**/.enforcer.yaml" },
+      { scheme: "file", pattern: "**/pom.xml" }
     ],
     synchronize: {
       fileEvents: [
@@ -50,6 +67,10 @@ export async function activate(context: ExtensionContext) {
         workspace.createFileSystemWatcher("**/.enforcer.yaml"),
         workspace.createFileSystemWatcher("**/*.dog")
       ],
+    },
+    markdown: {
+      isTrusted: true,
+      supportHtml: true
     },
     traceOutputChannel,
   };
@@ -61,6 +82,24 @@ export async function activate(context: ExtensionContext) {
     serverOptions,
     clientOptions
   );
+
+  // view
+
+  const dependencies = new EnforcerDependenciesProvider();
+  vscode.window.registerTreeDataProvider(
+    "seedwing-enforcer.dependencies", // aligns with the view id in package.json
+    dependencies,
+  );
+
+  client.onNotification(UpdatedDependencies.NAME, (params: UpdatedDependencies) => {
+    console.log("Params:", params);
+    dependencies.update(params);
+  });
+
+  client.registerProposedFeatures();
+
+  // start client
+
   await client.start();
 }
 

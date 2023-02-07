@@ -1,0 +1,107 @@
+h1 {
+  color: var(--vscode-panelTitle-activeForeground);
+  background-color: var(--vscode-panel-background);
+}
+
+/* rationale styles */
+
+:root {
+  /* we default to dark mode */
+  --sw-satisfied-background: hsl(120, 100%, 10%);
+  --sw-satisfied-background-hover: hsl(120, 100%, 20%);
+  --sw-satisfied-border: hsl(120, 30%, 60%);
+
+  --sw-unsatisfied-background: hsl(0, 100%, 10%);
+  --sw-unsatisfied-background-hover: hsl(0, 100%, 20%);
+  --sw-unsatisfied-border: hsl(0, 30%, 60%);
+
+  --sw-field-border-color: #ccc;
+}
+
+body.vscode-light {
+  --sw-satisfied-background: hsl(120, 100%, 90%);
+  --sw-satisfied-background-hover: hsl(120, 100%, 80%);
+  --sw-satisfied-border: hsl(120, 30%, 40%);
+
+  --sw-unsatisfied-background: hsl(0, 100%, 90%);
+  --sw-unsatisfied-background-hover: hsl(0, 100%, 80%);
+  --sw-unsatisfied-border: hsl(0, 30%, 40%);
+
+  --sw-field-border-color: #555;
+}
+
+.sw-rationale {
+}
+
+.sw-rationale code {
+  background-color: var(--vscode-editor-background);
+  color: var(--vscode-editor-foreground);
+
+  font-family: var(--vscode-editor-font-family);
+  font-size: var(--vscode-editor-font-size);
+  font-weight: var(--vscode-editor-font-weight);
+
+  padding: .1rem .2rem;
+}
+
+.sw-rationale div.entry {
+  padding: .25rem 1ex;
+  border-left: 3px solid;
+  margin-bottom: .5rem;
+  margin-top: .5rem;
+}
+
+.sw-rationale div.entry.satisfied {
+  border-color: var(--sw-satisfied-border);
+}
+
+.sw-rationale div.entry.unsatisfied {
+  border-color: var(--sw-unsatisfied-border);
+}
+
+.sw-rationale div.field {
+  border-bottom: 3px dotted;
+  border-color: var(--sw-field-border-color);
+
+  padding: .25rem 0;
+}
+
+.sw-rationale div.field:last-child {
+  border: none;
+}
+
+.sw-rationale div.field-name {
+}
+
+.sw-rationale div.satisfied {
+  background-color: var(--sw-satisfied-background);
+}
+
+.sw-rationale div.unsatisfied {
+  background-color: var(--sw-unsatisfied-background);
+}
+
+.sw-rationale div.satisfied:hover {
+  background-color: var(--sw-satisfied-background-hover);
+}
+
+.sw-rationale div.unsatisfied:hover {
+  background-color: var(--sw-unsatisfied-background-hover);
+}
+
+.sw-rationale .input,
+.sw-rationale .output
+{
+
+  font-family: var(--vscode-editor-font-family);
+  font-size: var(--vscode-editor-font-size);
+  font-weight: var(--vscode-editor-font-weight);
+
+  background-color: var(--vscode-editor-background);
+  color: var(--vscode-editor-foreground);
+
+  padding: 1px .5rem;
+  margin-top: .5rem;
+  margin-bottom: .5rem;
+}
+

@@ -1,7 +1,10 @@
 use crate::enforcer::{source::Source, Dependency};
+use crate::highlight::Range;
+use anyhow::anyhow;
 use async_trait::async_trait;
 use std::path::PathBuf;
 use tokio::fs;
+use url::Url;
 
 mod pom;
 
@@ -51,5 +54,13 @@ impl Source for MavenSource {
             .into_iter()
             .map(|d| d.try_into())
             .collect::<Result<Vec<Dependency>, _>>()?)
+    }
+
+    fn highlight(&self, _dependency: &Dependency) -> anyhow::Result<(Url, Range)> {
+        Ok((
+            Url::from_file_path(self.root.join("pom.xml"))
+                .map_err(|()| anyhow!("Failed to build path URI"))?,
+            Range::default(),
+        ))
     }
 }

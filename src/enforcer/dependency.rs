@@ -3,7 +3,11 @@ use seedwing_policy_engine::value::serde::to_value;
 use seedwing_policy_engine::value::RuntimeValue;
 use url::Url;
 
-#[derive(Clone, Debug, serde::Serialize)]
+/// The internal representation of a dependency
+///
+/// Currently this is exactly a Package URL. However, we could (and should) add additional
+/// information (like scope: dev, build, or regular dependency).
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Dependency {
     pub purl: Url,
 }

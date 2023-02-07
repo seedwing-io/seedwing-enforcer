@@ -13,12 +13,15 @@ specifiers:
   esbuild: ^0.15.18
   eslint: ^7.32.0
   glob: ^7.2.3
+  js-yaml: ^4.1.0
   mocha: ^8.4.0
+  packageurl-js: ^1.0.0
   typescript: ^4.9.4
   vscode-languageclient: ^8.0.2
   vscode-uri: ^3.0.7
 
 dependencies:
+  packageurl-js: 1.0.0
   vscode-languageclient: 8.0.2
 
 devDependencies:
@@ -34,6 +37,7 @@ devDependencies:
   esbuild: 0.15.18
   eslint: 7.32.0
   glob: 7.2.3
+  js-yaml: 4.1.0
   mocha: 8.4.0
   typescript: 4.9.4
   vscode-uri: 3.0.7
@@ -1613,6 +1617,13 @@ packages:
       argparse: 2.0.1
     dev: true
 
+  /js-yaml/4.1.0:
+    resolution: {integrity: sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==}
+    hasBin: true
+    dependencies:
+      argparse: 2.0.1
+    dev: true
+
   /json-buffer/3.0.1:
     resolution: {integrity: sha512-4bV5BfR2mqfQTJm+V5tPPdf+ZpuhiIvTuAB5g8kcrXOZpTT/QwwVRWBywX1ozr6lEuPdbHxwaJlm9G6mI2sfSQ==}
     dev: true
@@ -2042,6 +2053,10 @@ packages:
     dependencies:
       aggregate-error: 3.1.0
     dev: true
+
+  /packageurl-js/1.0.0:
+    resolution: {integrity: sha512-06kNFU+yB2pjDf5JyXouQeKfwSScGP8hrZK6VgB+W4SlVy4y5yB4vl+AVmh3R0GBNd+fBt0dEiSx3HKmuchuJQ==}
+    dev: false
 
   /parent-module/1.0.1:
     resolution: {integrity: sha512-GQ2EWRpQV8/o+Aw8YqtfZZPfNRWZYkbidE9k5rpl/hC3vtHHBfGm2Ifi6qWV+coDGkrUKZAxE3Lot5kcsRlh+g==}
