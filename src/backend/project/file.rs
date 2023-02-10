@@ -14,7 +14,6 @@ use crate::{
     highlight,
     protocol::{commands::SHOW_REPORT, types::Report},
 };
-use cyclonedx_bom::models::dependency::Dependencies;
 use serde_json::Value;
 use std::{collections::HashMap, io, path::PathBuf};
 use tower_lsp::{
