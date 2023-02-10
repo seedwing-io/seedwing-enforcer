@@ -120,7 +120,8 @@ impl DiagnosticPublisher {
 
         // publish changes
         for (url, state) in &self.state {
-            let diags = state.iter().flat_map(|(_, e)| e.iter().cloned()).collect();
+            let diags: Vec<_> = state.iter().flat_map(|(_, e)| e.iter().cloned()).collect();
+            log::info!("Publishing diagnostics: {}: {}", url, diags.len());
             self.target.publish(url.clone(), diags).await;
         }
     }

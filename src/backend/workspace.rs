@@ -85,7 +85,9 @@ impl Inner {
             }
         }
 
-        log::info!("New workspace set: {:?}", self.folders);
+        if log::log_enabled!(log::Level::Info) {
+            log::info!("New workspace set: {:?}", self.folders.keys());
+        }
     }
 
     pub async fn changed(&mut self, path: &Url) {
