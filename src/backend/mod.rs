@@ -27,10 +27,22 @@ impl LanguageServer for Backend {
         // remember how we got initialized, unfortunately we cannot set it up yet, as we can't
         // send notification before the `initialized` function got called.
 
-        self.initial_folders
-            .lock()
-            .unwrap()
-            .set(params.workspace_folders);
+        match (params.root_uri, params.workspace_folders) {
+            (_, Some(workspace_folders)) => {
+                self.initial_folders
+                    .lock()
+                    .unwrap()
+                    .set(Some(workspace_folders));
+            }
+            (Some(uri), _) => {
+                let name = uri.to_string();
+                self.initial_folders
+                    .lock()
+                    .unwrap()
+                    .set(Some(vec![WorkspaceFolder { uri, name }]));
+            }
+            _ => {}
+        }
 
         Ok(InitializeResult {
             server_info: Some(ServerInfo {
@@ -55,6 +67,7 @@ impl LanguageServer for Backend {
                 code_lens_provider: Some(CodeLensOptions {
                     resolve_provider: Some(false),
                 }),
+
                 // definition: Some(GotoCapability::default()),
                 ..ServerCapabilities::default()
             },
