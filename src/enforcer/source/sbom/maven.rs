@@ -24,7 +24,7 @@ impl Generator for MavenGenerator {
         })
     }
 
-    fn highlight(&self, dependency: &Dependency) -> anyhow::Result<(Url, Range)> {
+    fn highlight(&self, _: &Dependency) -> anyhow::Result<(Url, Range)> {
         let content = fs::read_to_string(self.root.join("pom.xml"))?;
         let h = Highlighter::new(&content)?;
         let url = Url::from_file_path(&self.root.join("pom.xml"))

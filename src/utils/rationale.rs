@@ -26,7 +26,7 @@ impl<'r> Rationalizer<'r> {
             html.push_str("<div class='entry unsatisfied'>");
         }
 
-        if let Some(input) = result.input() {
+        let input = result.input();
             let input_json = input.as_json();
             let input_json = serde_json::to_string_pretty(&input_json).unwrap();
             let input_json = input_json.replace('<', "&lt;");
@@ -62,7 +62,7 @@ impl<'r> Rationalizer<'r> {
                     Rationale::Const(_) => {}
                     Rationale::Primordial(_) => {}
                     Rationale::Expression(_) => {}
-                    Rationale::Function(_, rationale, supporting) => {
+                    Rationale::Function(_, _, supporting) => {
                         for each in supporting {
                             Self::rationale_inner(html, each);
                         }
@@ -87,9 +87,6 @@ impl<'r> Rationalizer<'r> {
                     .as_str(),
                 );
             }
-        } else {
-            html.push_str("No input provided");
-        }
 
         html.push_str("</div>");
     }
@@ -110,21 +107,23 @@ impl<'r> Rationalizer<'r> {
                     );
                 }
                 for (name, result) in fields {
-                    if let Rationale::MissingField(_) = result.rationale() {
-                        html.push_str("<div class='field unsatisfied'>");
-                        html.push_str(format!("field <code>{name}</code> is missing").as_str());
-                        html.push_str("</div>");
-                    } else {
-                        if result.satisfied() {
-                            html.push_str("<div class='field satisfied'>");
-                        } else {
+                    if let Some(result) = result {
+                        if let Rationale::MissingField(_) = result.rationale() {
                             html.push_str("<div class='field unsatisfied'>");
+                            html.push_str(format!("field <code>{name}</code> is missing").as_str());
+                            html.push_str("</div>");
+                        } else {
+                            if result.satisfied() {
+                                html.push_str("<div class='field satisfied'>");
+                            } else {
+                                html.push_str("<div class='field unsatisfied'>");
+                            }
+                            html.push_str("<div class='field-name'>field <code>");
+                            html.push_str(name.as_str());
+                            html.push_str("</code></div>");
+                            Self::rationale_inner(html, result);
+                            html.push_str("</div>");
                         }
-                        html.push_str("<div class='field-name'>field <code>");
-                        html.push_str(name.as_str());
-                        html.push_str("</code></div>");
-                        Self::rationale_inner(html, result);
-                        html.push_str("</div>");
                     }
                 }
                 html.push_str("</div>");
@@ -182,7 +181,7 @@ impl<'r> Rationalizer<'r> {
             Rationale::Const(_) => {}
             Rationale::Primordial(_) => {}
             Rationale::Expression(_) => {}
-            Rationale::Function(val, rationale, supporting) => {
+            Rationale::Function(val, _, supporting) => {
                 if *val {
                     match result.raw_output() {
                         Output::None => {
