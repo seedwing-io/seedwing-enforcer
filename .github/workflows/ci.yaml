@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    # Run on the main branch
+    branches:
+      - main
+  # Also on PRs, just be careful not to publish anything
+
+jobs:
+  ci:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/.crates.toml
+            ~/.cargo/.crates2.json
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Check formatting
+        run: cargo fmt --check
+
+      - name: Check
+        run: cargo check
