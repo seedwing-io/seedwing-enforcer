@@ -27,66 +27,66 @@ impl<'r> Rationalizer<'r> {
         }
 
         let input = result.input();
-            let input_json = input.as_json();
-            let input_json = serde_json::to_string_pretty(&input_json).unwrap();
-            let input_json = input_json.replace('<', "&lt;");
-            let input_json = input_json.replace('>', "&gt;");
-            html.push_str("<div class='input'>");
-            html.push_str("<pre>");
-            html.push_str(input_json.as_str());
-            html.push_str("</pre>");
-            html.push_str("</div>");
+        let input_json = input.as_json();
+        let input_json = serde_json::to_string_pretty(&input_json).unwrap();
+        let input_json = input_json.replace('<', "&lt;");
+        let input_json = input_json.replace('>', "&gt;");
+        html.push_str("<div class='input'>");
+        html.push_str("<pre>");
+        html.push_str(input_json.as_str());
+        html.push_str("</pre>");
+        html.push_str("</div>");
 
-            if let Some(name) = result.ty().name() {
-                html.push_str("<div>");
-                if result.satisfied() {
-                    html.push_str(
-                        format!("<div>Type <code>{name}</code> was satisfied</div>").as_str(),
-                    );
-                } else {
-                    html.push_str(
-                        format!("<div>Type <code>{name}</code> was not satisfied</div>").as_str(),
-                    );
-                }
-
-                match result.rationale() {
-                    Rationale::Anything => {}
-                    Rationale::Nothing => {}
-                    Rationale::Chain(_) => {}
-                    Rationale::Object(_) => {}
-                    Rationale::List(_) => {}
-                    Rationale::NotAnObject => {}
-                    Rationale::NotAList => {}
-                    Rationale::MissingField(_) => {}
-                    Rationale::InvalidArgument(_) => {}
-                    Rationale::Const(_) => {}
-                    Rationale::Primordial(_) => {}
-                    Rationale::Expression(_) => {}
-                    Rationale::Function(_, _, supporting) => {
-                        for each in supporting {
-                            Self::rationale_inner(html, each);
-                        }
-                    }
-                    Rationale::Refinement(_, _) => {}
-                }
-                html.push_str("</div>");
-            } else if result.satisfied() {
-                html.push_str("<div>was satisfied</div>");
-            } else {
-                html.push_str("<div>was not satisfied</div>");
-            }
-
-            Self::supported_by(html, result);
-
-            if let Some(trace) = result.trace() {
+        if let Some(name) = result.ty().name() {
+            html.push_str("<div>");
+            if result.satisfied() {
                 html.push_str(
-                    format!(
-                        "<div>Evaluation time: {} ns</div>",
-                        trace.duration.as_nanos()
-                    )
-                    .as_str(),
+                    format!("<div>Type <code>{name}</code> was satisfied</div>").as_str(),
+                );
+            } else {
+                html.push_str(
+                    format!("<div>Type <code>{name}</code> was not satisfied</div>").as_str(),
                 );
             }
+
+            match result.rationale() {
+                Rationale::Anything => {}
+                Rationale::Nothing => {}
+                Rationale::Chain(_) => {}
+                Rationale::Object(_) => {}
+                Rationale::List(_) => {}
+                Rationale::NotAnObject => {}
+                Rationale::NotAList => {}
+                Rationale::MissingField(_) => {}
+                Rationale::InvalidArgument(_) => {}
+                Rationale::Const(_) => {}
+                Rationale::Primordial(_) => {}
+                Rationale::Expression(_) => {}
+                Rationale::Function(_, _, supporting) => {
+                    for each in supporting {
+                        Self::rationale_inner(html, each);
+                    }
+                }
+                Rationale::Refinement(_, _) => {}
+            }
+            html.push_str("</div>");
+        } else if result.satisfied() {
+            html.push_str("<div>was satisfied</div>");
+        } else {
+            html.push_str("<div>was not satisfied</div>");
+        }
+
+        Self::supported_by(html, result);
+
+        if let Some(trace) = result.trace() {
+            html.push_str(
+                format!(
+                    "<div>Evaluation time: {} ns</div>",
+                    trace.duration.as_nanos()
+                )
+                .as_str(),
+            );
+        }
 
         html.push_str("</div>");
     }
