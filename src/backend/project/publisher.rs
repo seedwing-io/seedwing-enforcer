@@ -75,6 +75,7 @@ impl DiagnosticPublisher {
         }
     }
 
+    #[allow(unused)]
     pub async fn publish_list(&mut self, category: Category, list: Vec<(Url, Diagnostic)>) {
         let mut map = HashMap::new();
         for (k, v) in list {

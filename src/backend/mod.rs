@@ -19,8 +19,6 @@ pub struct Backend {
     initial_folders: Mutex<Cell<Option<Vec<WorkspaceFolder>>>>,
 }
 
-const CODE_ACTION_KIND_REPORT: CodeActionKind = CodeActionKind::new("report");
-
 #[tower_lsp::async_trait]
 impl LanguageServer for Backend {
     async fn initialize(&self, params: InitializeParams) -> Result<InitializeResult> {
