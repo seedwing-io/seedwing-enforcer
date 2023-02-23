@@ -2409,6 +2409,7 @@ dependencies = [
 [[package]]
 name = "seedwing-policy-engine"
 version = "0.1.0-alpha.2"
+source = "git+https://github.com/seedwing-io/seedwing-policy?rev=d946d0efcd924d23bd4ffe4258eefa233862c4ee#d946d0efcd924d23bd4ffe4258eefa233862c4ee"
 dependencies = [
  "anyhow",
  "ariadne",

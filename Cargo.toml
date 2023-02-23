@@ -27,4 +27,5 @@ roxmltree = "0.18.0"
 seedwing-policy-engine = "0.1.0-alpha.2"
 
 [patch.crates-io]
-seedwing-policy-engine = { path = "../seedwing-policy/seedwing-policy-engine" }
+# seedwing-policy-engine = { path = "../seedwing-policy/seedwing-policy-engine" }
+seedwing-policy-engine = { git = "https://github.com/seedwing-io/seedwing-policy", rev = "d946d0efcd924d23bd4ffe4258eefa233862c4ee" }
