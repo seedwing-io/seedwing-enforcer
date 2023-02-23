@@ -1,6 +1,7 @@
 use ropey::Rope;
 use roxmltree::{Document, Node};
 use std::fmt::{Display, Formatter};
+use std::ops::{Deref, DerefMut};
 
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Position {
@@ -34,6 +35,20 @@ impl From<tower_lsp::lsp_types::Position> for Position {
 
 #[derive(Clone, Debug, Default, Eq, PartialEq, Hash)]
 pub struct Range(pub std::ops::Range<Position>);
+
+impl Deref for Range {
+    type Target = std::ops::Range<Position>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for Range {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
 
 impl From<Range> for tower_lsp::lsp_types::Range {
     fn from(value: Range) -> Self {
