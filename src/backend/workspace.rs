@@ -5,7 +5,9 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tokio_util::task::LocalPoolHandle;
-use tower_lsp::lsp_types::{CodeLens, WorkspaceFolder};
+use tower_lsp::lsp_types::{
+    CodeActionContext, CodeActionOrCommand, CodeLens, Range, WorkspaceFolder,
+};
 use tower_lsp::Client;
 use url::Url;
 
@@ -47,6 +49,19 @@ impl Workspace {
 
     pub async fn code_lens(&self, path: &Url) -> anyhow::Result<Vec<CodeLens>> {
         self.inner.read().await.code_lens(path).await
+    }
+
+    pub async fn code_action(
+        &self,
+        path: &Url,
+        range: &Range,
+        context: &CodeActionContext,
+    ) -> anyhow::Result<Vec<CodeActionOrCommand>> {
+        self.inner
+            .read()
+            .await
+            .code_action(path, range, context)
+            .await
     }
 }
 
@@ -107,6 +122,25 @@ impl Inner {
             for (root, folder) in &self.folders {
                 if path.starts_with(root) {
                     result.extend(folder.code_lens(path).await?);
+                }
+            }
+        }
+
+        Ok(result)
+    }
+
+    async fn code_action(
+        &self,
+        path: &Url,
+        range: &Range,
+        context: &CodeActionContext,
+    ) -> anyhow::Result<Vec<CodeActionOrCommand>> {
+        let mut result = vec![];
+
+        if let Some(path) = as_path(path) {
+            for (root, folder) in &self.folders {
+                if path.starts_with(root) {
+                    result.extend(folder.code_action(path, range, context).await?);
                 }
             }
         }
@@ -199,6 +233,22 @@ impl Folder {
                 result.extend(v.code_lens(path).await?);
             }
         }
+        Ok(result)
+    }
+
+    pub async fn code_action(
+        &self,
+        path: &Path,
+        range: &Range,
+        context: &CodeActionContext,
+    ) -> anyhow::Result<Vec<CodeActionOrCommand>> {
+        let mut result = vec![];
+        for (k, v) in &self.projects {
+            if path.starts_with(k) {
+                result.extend(v.code_action(path, range, context).await?);
+            }
+        }
+
         Ok(result)
     }
 }

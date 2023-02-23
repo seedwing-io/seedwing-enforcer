@@ -16,6 +16,7 @@ use crate::{
 };
 use serde_json::Value;
 use std::{collections::HashMap, io, path::PathBuf};
+use tower_lsp::lsp_types::{CodeActionContext, CodeActionOrCommand, Range};
 use tower_lsp::{
     lsp_types::{CodeLens, Command, Diagnostic, DiagnosticSeverity},
     Client,
@@ -163,15 +164,66 @@ impl File {
         for (k, reports) in reports {
             result.push(CodeLens {
                 range: k.into(),
-                command: Some(Command {
-                    title: format!("Show Report ({} entries)", reports.len()),
-                    command: SHOW_REPORT.to_string(),
-                    arguments: Some(vec![serde_json::to_value(&reports)?]),
-                }),
+                command: Some(Self::create_report_command(reports)?),
                 data: None,
             });
         }
 
         Ok(result)
+    }
+
+    pub async fn code_action(
+        &self,
+        _range: &Range,
+        _context: &CodeActionContext,
+    ) -> anyhow::Result<Vec<CodeActionOrCommand>> {
+        Ok(vec![])
+
+        /*
+        log::info!("Code actions for - range: {range:?}, contex: {context:?}");
+
+        let root = match Url::from_file_path(&self.path) {
+            Ok(url) => url,
+            Err(_) => return Ok(vec![]),
+        };
+
+        let diags = if let Some(diags) = self.diagnostics.get(&root) {
+            diags
+        } else {
+            return Ok(vec![]);
+        };
+
+        let req_range = highlight::Range::from(*range);
+
+        // gather reports
+
+        let mut report: Vec<Value> = vec![];
+
+        for d in diags {
+            let range = highlight::Range::from(d.range);
+            if range.contains(&req_range.start) {
+                if let Some(data) = &d.data {
+                    report.push(data.clone());
+                }
+            }
+        }
+
+        // provide code action
+
+        Ok(if report.is_empty() {
+            vec![]
+        } else {
+            vec![CodeActionOrCommand::Command(Self::create_report_command(
+                report,
+            )?)]
+        })*/
+    }
+
+    fn create_report_command(report: Vec<Value>) -> anyhow::Result<Command> {
+        Ok(Command {
+            title: format!("Show Report ({} entries)", report.len()),
+            command: SHOW_REPORT.to_string(),
+            arguments: Some(vec![serde_json::to_value(&report)?]),
+        })
     }
 }

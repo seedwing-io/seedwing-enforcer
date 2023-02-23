@@ -4,7 +4,7 @@ use crate::enforcer::seedwing::Enforcer;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use tokio_util::task::LocalPoolHandle;
-use tower_lsp::lsp_types::CodeLens;
+use tower_lsp::lsp_types::{CodeActionContext, CodeActionOrCommand, CodeLens, Range};
 use tower_lsp::Client;
 
 mod file;
@@ -97,6 +97,19 @@ impl Project {
     pub async fn code_lens(&self, path: &Path) -> anyhow::Result<Vec<CodeLens>> {
         if let Some(file) = self.files.get(path) {
             file.code_lens().await
+        } else {
+            Ok(vec![])
+        }
+    }
+
+    pub async fn code_action(
+        &self,
+        path: &Path,
+        range: &Range,
+        context: &CodeActionContext,
+    ) -> anyhow::Result<Vec<CodeActionOrCommand>> {
+        if let Some(file) = self.files.get(path) {
+            file.code_action(range, context).await
         } else {
             Ok(vec![])
         }

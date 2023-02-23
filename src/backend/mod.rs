@@ -19,6 +19,8 @@ pub struct Backend {
     initial_folders: Mutex<Cell<Option<Vec<WorkspaceFolder>>>>,
 }
 
+const CODE_ACTION_KIND_REPORT: CodeActionKind = CodeActionKind::new("report");
+
 #[tower_lsp::async_trait]
 impl LanguageServer for Backend {
     async fn initialize(&self, params: InitializeParams) -> Result<InitializeResult> {
@@ -103,6 +105,26 @@ impl LanguageServer for Backend {
 
     async fn did_save(&self, _: DidSaveTextDocumentParams) {
         // TODO: we might want to notify the project now
+    }
+
+    async fn code_action(&self, params: CodeActionParams) -> Result<Option<CodeActionResponse>> {
+        log::info!("Code action: {params:?}");
+
+        let result = self
+            .workspace
+            .code_action(&params.text_document.uri, &params.range, &params.context)
+            .await
+            .map_err(|err| Error {
+                code: ErrorCode::InternalError,
+                message: err.to_string(),
+                data: None,
+            })?;
+
+        Ok(if result.is_empty() {
+            None
+        } else {
+            Some(result)
+        })
     }
 
     async fn code_lens(&self, params: CodeLensParams) -> Result<Option<Vec<CodeLens>>> {
