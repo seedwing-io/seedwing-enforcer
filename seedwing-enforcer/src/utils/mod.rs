@@ -1,7 +1,8 @@
+use lsp_types::{Position, Range};
 use ropey::Rope;
 use seedwing_policy_engine::lang::parser::SourceSpan;
-use tower_lsp::lsp_types::{Position, Range};
 
+pub mod pool;
 pub mod rationale;
 
 pub fn span_to_range(content: &Rope, span: SourceSpan) -> Option<Range> {

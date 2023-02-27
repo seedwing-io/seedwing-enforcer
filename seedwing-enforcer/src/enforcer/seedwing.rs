@@ -2,7 +2,9 @@
 
 use crate::config::{self, Config, Dependencies, FILE_NAME_YAML};
 use crate::enforcer::{Dependency, Outcome};
+use crate::utils::pool::{Pool, PoolError};
 use crate::utils::{rationale::Rationalizer, span_to_range};
+use lsp_types::{Diagnostic, DiagnosticSeverity};
 use ropey::Rope;
 use seedwing_policy_engine::{
     lang::builder::Builder,
@@ -15,9 +17,7 @@ use std::{
     path::{Path, PathBuf},
     sync::Arc,
 };
-use tokio::{sync::RwLock, task::JoinError};
-use tokio_util::task::LocalPoolHandle;
-use tower_lsp::lsp_types::{Diagnostic, DiagnosticSeverity};
+use tokio::sync::RwLock;
 
 const DEFAULT_PACKAGE: &str = "enforcer";
 
@@ -26,7 +26,7 @@ pub enum Error {
     #[error("configuration error: {0}")]
     Configuration(anyhow::Error),
     #[error("failed to run: {0}")]
-    Join(#[from] JoinError),
+    Join(#[from] PoolError),
     #[error("I/O error: {0}")]
     Io(#[from] io::Error),
     #[error("serialization error: {0}")]
@@ -45,7 +45,7 @@ pub struct Enforcer {
 }
 
 impl Enforcer {
-    pub async fn new(root: impl Into<PathBuf>, pool: LocalPoolHandle) -> Self {
+    pub async fn new(root: impl Into<PathBuf>, pool: Pool) -> Self {
         let mut inner = Inner {
             root: root.into(),
             pool,
@@ -79,7 +79,7 @@ impl Enforcer {
 struct Inner {
     /// Path to the root, containing the `.enforcer` file.
     root: PathBuf,
-    pool: LocalPoolHandle,
+    pool: Pool,
 
     config: Option<anyhow::Result<Config>>,
 }

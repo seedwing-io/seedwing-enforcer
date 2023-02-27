@@ -15,7 +15,7 @@ impl Display for Position {
     }
 }
 
-impl From<Position> for tower_lsp::lsp_types::Position {
+impl From<Position> for lsp_types::Position {
     fn from(value: Position) -> Self {
         Self {
             line: value.line as _,
@@ -24,8 +24,8 @@ impl From<Position> for tower_lsp::lsp_types::Position {
     }
 }
 
-impl From<tower_lsp::lsp_types::Position> for Position {
-    fn from(value: tower_lsp::lsp_types::Position) -> Self {
+impl From<lsp_types::Position> for Position {
+    fn from(value: lsp_types::Position) -> Self {
         Self {
             line: value.line as _,
             position: value.character as _,
@@ -50,7 +50,7 @@ impl DerefMut for Range {
     }
 }
 
-impl From<Range> for tower_lsp::lsp_types::Range {
+impl From<Range> for lsp_types::Range {
     fn from(value: Range) -> Self {
         Self {
             start: value.0.start.into(),
@@ -59,8 +59,8 @@ impl From<Range> for tower_lsp::lsp_types::Range {
     }
 }
 
-impl From<tower_lsp::lsp_types::Range> for Range {
-    fn from(value: tower_lsp::lsp_types::Range) -> Self {
+impl From<lsp_types::Range> for Range {
+    fn from(value: lsp_types::Range) -> Self {
         Self(std::ops::Range {
             start: value.start.into(),
             end: value.end.into(),

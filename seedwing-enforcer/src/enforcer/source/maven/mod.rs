@@ -2,8 +2,8 @@ use crate::enforcer::{source::Source, Dependency};
 use crate::highlight::Range;
 use anyhow::anyhow;
 use async_trait::async_trait;
+use std::fs;
 use std::path::PathBuf;
-use tokio::fs;
 use url::Url;
 
 mod pom;
@@ -44,7 +44,7 @@ impl MavenSource {
 #[async_trait]
 impl Source for MavenSource {
     async fn scan(&self) -> anyhow::Result<Vec<Dependency>> {
-        let content = fs::read_to_string(self.root.join("pom.xml")).await?;
+        let content = fs::read_to_string(self.root.join("pom.xml"))?;
 
         let project: pom::Project = quick_xml::de::from_str(&content)?;
 

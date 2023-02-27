@@ -1,8 +1,7 @@
 use async_trait::async_trait;
-use std::fmt::Formatter;
 use std::{
     collections::{HashMap, HashSet},
-    fmt::Debug,
+    fmt::{Debug, Formatter},
     path::PathBuf,
     sync::Arc,
 };

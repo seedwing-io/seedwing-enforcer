@@ -1,10 +1,10 @@
 use crate::backend::project::Project;
+use seedwing_enforcer::utils::pool::Pool;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tokio_util::task::LocalPoolHandle;
 use tower_lsp::lsp_types::{
     CodeActionContext, CodeActionOrCommand, CodeLens, Range, WorkspaceFolder,
 };
@@ -68,13 +68,13 @@ impl Workspace {
 struct Inner {
     client: Client,
     folders: HashMap<PathBuf, Folder>,
-    pool: LocalPoolHandle,
+    pool: Pool,
 }
 
 impl Inner {
     pub fn new(client: Client) -> Self {
         Self {
-            pool: LocalPoolHandle::new(10),
+            pool: Pool::new(),
             client,
             folders: Default::default(),
         }
@@ -154,12 +154,12 @@ impl Inner {
 pub struct Folder {
     client: Client,
     root: PathBuf,
-    pool: LocalPoolHandle,
+    pool: Pool,
     projects: HashMap<PathBuf, Project>,
 }
 
 impl Folder {
-    pub async fn new(client: Client, root: PathBuf, pool: LocalPoolHandle) -> Self {
+    pub async fn new(client: Client, root: PathBuf, pool: Pool) -> Self {
         let mut result = Self {
             client,
             root,

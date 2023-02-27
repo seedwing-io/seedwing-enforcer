@@ -18,9 +18,11 @@ use seedwing_enforcer::{
 };
 use serde_json::Value;
 use std::{collections::HashMap, io, path::PathBuf};
-use tower_lsp::lsp_types::{CodeActionContext, CodeActionOrCommand, Range};
 use tower_lsp::{
-    lsp_types::{CodeLens, Command, Diagnostic, DiagnosticSeverity},
+    lsp_types::{
+        CodeActionContext, CodeActionOrCommand, CodeLens, Command, Diagnostic, DiagnosticSeverity,
+        Range,
+    },
     Client,
 };
 use url::Url;

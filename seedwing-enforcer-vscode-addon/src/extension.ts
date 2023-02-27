@@ -3,109 +3,135 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import {
-  workspace,
-  ExtensionContext,
-  window,
-} from "vscode";
-
 import * as vscode from "vscode";
-
+import { ExtensionContext, window, workspace, } from "vscode";
 import {
-  Executable,
-  LanguageClient,
-  LanguageClientOptions,
-  ServerOptions,
+    Executable,
+    LanguageClient,
+    LanguageClientOptions,
+    ServerOptions,
 } from "vscode-languageclient/node";
-
-import {
-  EnforcerDependenciesProvider
-} from "./deps";
-
-import {SeedwingReport, UpdatedDependencies} from "./data";
+import { EnforcerDependenciesProvider } from "./deps";
+import { SeedwingReport, UpdatedDependencies } from "./data";
 import { Report } from "./report";
+import { ServiceConnection } from '@vscode/sync-api-common/node';
+import { ApiService, Requests } from '@vscode/sync-api-service';
+import * as path from 'path';
 
 let client: LanguageClient;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function serverOptionsNative(context: ExtensionContext): ServerOptions {
+    const command = process.env.SERVER_PATH || "seedwing-enforcer-lsp";
+    const run: Executable = {
+        command,
+        options: {
+            env: {
+                ...process.env,
+                // eslint-disable-next-line @typescript-eslint/naming-convention
+                RUST_LOG: "debug",
+            },
+        },
+    };
+    return {
+        run,
+        debug: run,
+    };
+}
+
+/*
+function serverOptionsWasi(context: ExtensionContext): ServerOptions {
+    return async () => {
+        const worker = new Worker(path.join(__dirname, "server.js"));
+        const connection = new ServiceConnection<Requests>(worker);
+        const apiService = new ApiService(name, connection, {
+            exitHandler: (_rval) => {
+                process.nextTick(() => worker.terminate());
+            }
+        });
+
+        apiService.signalReady();
+
+        return {
+            detached: true,
+        };
+    };
+}
+*/
+
+async function startLsp(context: ExtensionContext): Promise<LanguageClient> {
+    const traceOutputChannel = window.createOutputChannel("Seedwing Enforcer Language Server trace");
+
+    const clientOptions: LanguageClientOptions = {
+        documentSelector: [
+            { scheme: "file", pattern: "**/.enforcer.yaml" },
+            { scheme: "file", pattern: "**/pom.xml" }
+        ],
+        synchronize: {
+            fileEvents: [
+                workspace.createFileSystemWatcher("**/pom.xml"),
+                workspace.createFileSystemWatcher("**/.enforcer.yaml"),
+                workspace.createFileSystemWatcher("**/*.dog")
+            ],
+        },
+        markdown: {
+            isTrusted: true,
+            supportHtml: true
+        },
+        traceOutputChannel,
+    };
+
+    const serverOptions = serverOptionsNative(context);
+    //const serverOptions = serverOptionsWasi(context);
+
+    // Create the language client and start the client.
+    client = new LanguageClient(
+        "seedwing-enforcer-lsp",
+        "Seedwing Enforcer",
+        serverOptions,
+        clientOptions
+    );
+
+    return client;
+}
+
 export async function activate(context: ExtensionContext): Promise<void> {
 
-  // register report view
+    // register report view
 
-  context.subscriptions.push(
-      vscode.commands.registerCommand("seedwingEnforcer.showReport", (reports: SeedwingReport[]) => {
-          new Report(context.extensionUri, reports);
-      })
-  );
+    context.subscriptions.push(
+        vscode.commands.registerCommand("seedwingEnforcer.showReport", (reports: SeedwingReport[]) => {
+            new Report(context.extensionUri, reports);
+        })
+    );
 
-  // LSP
+    // LSP
 
-  const traceOutputChannel = window.createOutputChannel("Seedwing Enforcer Language Server trace");
-  const command = process.env.SERVER_PATH || "seedwing-enforcer-lsp";
-  const run: Executable = {
-    command,
-    options: {
-      env: {
-        ...process.env,
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        RUST_LOG: "debug",
-      },
-    },
-  };
-  const serverOptions: ServerOptions = {
-    run,
-    debug: run,
-  };
+    client = await startLsp(context);
 
-  const clientOptions: LanguageClientOptions = {
-    documentSelector: [
-      { scheme: "file", pattern: "**/.enforcer.yaml" },
-      { scheme: "file", pattern: "**/pom.xml" }
-    ],
-    synchronize: {
-      fileEvents: [
-        workspace.createFileSystemWatcher("**/pom.xml"),
-        workspace.createFileSystemWatcher("**/.enforcer.yaml"),
-        workspace.createFileSystemWatcher("**/*.dog")
-      ],
-    },
-    markdown: {
-      isTrusted: true,
-      supportHtml: true
-    },
-    traceOutputChannel,
-  };
+    // view
 
-  // Create the language client and start the client.
-  client = new LanguageClient(
-    "seedwing-enforcer-lsp",
-    "Seedwing Enforcer",
-    serverOptions,
-    clientOptions
-  );
+    const dependencies = new EnforcerDependenciesProvider();
+    vscode.window.registerTreeDataProvider(
+        "seedwing-enforcer.dependencies", // aligns with the view id in package.json
+        dependencies,
+    );
 
-  // view
+    client.onNotification(UpdatedDependencies.NAME, (params: UpdatedDependencies) => {
+        console.log("Params:", params);
+        dependencies.update(params);
+    });
 
-  const dependencies = new EnforcerDependenciesProvider();
-  vscode.window.registerTreeDataProvider(
-    "seedwing-enforcer.dependencies", // aligns with the view id in package.json
-    dependencies,
-  );
+    client.registerProposedFeatures();
 
-  client.onNotification(UpdatedDependencies.NAME, (params: UpdatedDependencies) => {
-    console.log("Params:", params);
-    dependencies.update(params);
-  });
+    // start client
 
-  client.registerProposedFeatures();
-
-  // start client
-
-  await client.start();
+    await client.start();
 }
 
 export function deactivate(): Thenable<void> | undefined {
-  if (!client) {
-    return undefined;
-  }
-  return client.stop();
+    if (!client) {
+        return undefined;
+    }
+    return client.stop();
 }

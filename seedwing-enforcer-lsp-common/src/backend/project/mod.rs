@@ -1,9 +1,9 @@
 use crate::backend::project::publisher::{Category, DiagnosticPublisher};
 use seedwing_enforcer::config::FILE_NAME_YAML;
 use seedwing_enforcer::enforcer::seedwing::Enforcer;
+use seedwing_enforcer::utils::pool::Pool;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use tokio_util::task::LocalPoolHandle;
 use tower_lsp::lsp_types::{CodeActionContext, CodeActionOrCommand, CodeLens, Range};
 use tower_lsp::Client;
 
@@ -29,7 +29,7 @@ pub struct Project {
 }
 
 impl Project {
-    pub async fn new(client: Client, root: PathBuf, pool: LocalPoolHandle) -> Self {
+    pub async fn new(client: Client, root: PathBuf, pool: Pool) -> Self {
         let enforcer = Enforcer::new(&root, pool).await;
         let publisher = DiagnosticPublisher::new(client.clone());
         let mut result = Self {

@@ -25,5 +25,6 @@ cyclonedx-bom = "0.4.0"
 roxmltree = "0.18.0"
 
 seedwing-policy-engine = "0.1.0-alpha.2"
+
 seedwing-enforcer = { path = "../seedwing-enforcer" }
 seedwing-enforcer-lsp-common = { path = "../seedwing-enforcer-lsp-common" }
