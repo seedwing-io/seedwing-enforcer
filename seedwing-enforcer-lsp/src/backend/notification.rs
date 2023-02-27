@@ -1,4 +1,4 @@
-use crate::enforcer::Dependency;
+use seedwing_enforcer::enforcer::Dependency;
 use tower_lsp::lsp_types::notification::Notification;
 use url::Url;
 

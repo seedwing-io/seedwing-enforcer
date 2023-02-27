@@ -3,6 +3,9 @@ use crate::{
         notification::{UpdatedDependencies, UpdatedDependenciesParameters},
         project::publisher::{Category, DiagnosticPublisher},
     },
+    protocol::{commands::SHOW_REPORT, types::Report},
+};
+use seedwing_enforcer::{
     enforcer::{
         seedwing::{self, Enforcer},
         source::{
@@ -12,7 +15,6 @@ use crate::{
         Dependency, Outcome,
     },
     highlight,
-    protocol::{commands::SHOW_REPORT, types::Report},
 };
 use serde_json::Value;
 use std::{collections::HashMap, io, path::PathBuf};

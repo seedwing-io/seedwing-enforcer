@@ -1,6 +1,6 @@
 use crate::backend::project::publisher::{Category, DiagnosticPublisher};
-use crate::config::FILE_NAME_YAML;
-use crate::enforcer::seedwing::Enforcer;
+use seedwing_enforcer::config::FILE_NAME_YAML;
+use seedwing_enforcer::enforcer::seedwing::Enforcer;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use tokio_util::task::LocalPoolHandle;

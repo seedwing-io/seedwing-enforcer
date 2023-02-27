@@ -2,18 +2,20 @@
 
 use crate::config::{self, Config, Dependencies, FILE_NAME_YAML};
 use crate::enforcer::{Dependency, Outcome};
-use crate::utils::rationale::Rationalizer;
-use crate::utils::span_to_range;
+use crate::utils::{rationale::Rationalizer, span_to_range};
 use ropey::Rope;
-use seedwing_policy_engine::lang::builder::Builder;
-use seedwing_policy_engine::runtime::{sources::Ephemeral, BuildError, RuntimeError, World};
-use seedwing_policy_engine::value::{self, RuntimeValue};
-use std::collections::HashMap;
-use std::path::{Path, PathBuf};
-use std::sync::Arc;
-use std::{fs, io};
-use tokio::sync::RwLock;
-use tokio::task::JoinError;
+use seedwing_policy_engine::{
+    lang::builder::Builder,
+    runtime::{sources::Ephemeral, BuildError, RuntimeError, World},
+    value::{self, RuntimeValue},
+};
+use std::{
+    collections::HashMap,
+    fs, io,
+    path::{Path, PathBuf},
+    sync::Arc,
+};
+use tokio::{sync::RwLock, task::JoinError};
 use tokio_util::task::LocalPoolHandle;
 use tower_lsp::lsp_types::{Diagnostic, DiagnosticSeverity};
 

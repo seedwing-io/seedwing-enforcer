@@ -2,11 +2,7 @@ use crate::backend::Backend;
 use tower_lsp::{LspService, Server};
 
 pub mod backend;
-pub mod config;
-pub mod enforcer;
-pub mod highlight;
 pub mod protocol;
-pub mod utils;
 
 #[tokio::main]
 async fn main() {
