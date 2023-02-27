@@ -1,0 +1,27 @@
+[package]
+name = "seedwing-enforcer"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.66"
+
+[dependencies]
+anyhow = "1"
+async-trait = "0.1.64"
+env_logger = "0.10.0"
+log = "0.4.14"
+quick-xml = { version = "0.27", features = ["serialize"] }
+ropey = "1.6.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0.78"
+serde_yaml = "0.9.17"
+thiserror = "1"
+tokio = { version = "1.17.0", features = ["full"] }
+tokio-util = { version = "0.7.4", features = ["rt"] }
+tower-lsp = { version = "0.18.0" }
+url = "2.3.1"
+walkdir = "2"
+cyclonedx-bom = "0.4.0"
+
+roxmltree = "0.18.0"
+
+seedwing-policy-engine = "0.1.0-alpha.2"

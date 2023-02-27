@@ -13,7 +13,7 @@
       ],
       "preLaunchTask": "${defaultBuildTask}",
       "env": {
-        "SERVER_PATH": "${workspaceRoot}/target/debug/seedwing-enforcer-lsp"
+        "SERVER_PATH": "${workspaceRoot}/../target/debug/seedwing-enforcer-lsp"
       }
     },
     {

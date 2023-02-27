@@ -2383,6 +2383,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "seedwing-enforcer"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "cyclonedx-bom",
+ "env_logger",
+ "log",
+ "quick-xml",
+ "ropey",
+ "roxmltree",
+ "seedwing-policy-engine",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "thiserror",
+ "tokio",
+ "tokio-util",
+ "tower-lsp",
+ "url",
+ "walkdir",
+]
+
+[[package]]
 name = "seedwing-enforcer-lsp"
 version = "0.1.0"
 dependencies = [
@@ -2394,6 +2418,7 @@ dependencies = [
  "quick-xml",
  "ropey",
  "roxmltree",
+ "seedwing-enforcer",
  "seedwing-policy-engine",
  "serde",
  "serde_json",
