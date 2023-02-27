@@ -1,5 +1,5 @@
 [package]
-name = "seedwing-enforcer-lsp"
+name = "seedwing-enforcer-lsp-common"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.66"
@@ -26,4 +26,3 @@ roxmltree = "0.18.0"
 
 seedwing-policy-engine = "0.1.0-alpha.2"
 seedwing-enforcer = { path = "../seedwing-enforcer" }
-seedwing-enforcer-lsp-common = { path = "../seedwing-enforcer-lsp-common" }

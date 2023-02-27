@@ -1,8 +1,5 @@
-use crate::backend::Backend;
+use seedwing_enforcer_lsp_common::backend::Backend;
 use tower_lsp::{LspService, Server};
-
-pub mod backend;
-pub mod protocol;
 
 #[tokio::main]
 async fn main() {

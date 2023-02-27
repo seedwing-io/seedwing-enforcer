@@ -1,0 +1,21 @@
+[package]
+name = "seedwing-enforcer-lsp-wasm"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.66"
+
+[profile.release]
+codegen-units = 1
+lto = "fat"
+opt-level = "z"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["tower-lsp/runtime-agnostic"]
+
+[dependencies]
+seedwing-enforcer = { path = "../seedwing-enforcer" }
+seedwing-enforcer-lsp-common = { path = "../seedwing-enforcer-lsp-common" }
+tower-lsp = { version = "0.18.0", default-features = false }
