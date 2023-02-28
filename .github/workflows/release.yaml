@@ -1,0 +1,194 @@
+name: release
+
+on:
+  push:
+    # Releases are tags named 'v<version>', and must have the "major.minor.micro", for example: "0.1.0".
+    # Release candidates are tagged as `v<version>-rc<num>`, for example: "0.1.0-rc1".
+    tags:
+      - "v*"
+
+
+permissions:
+  contents: write # for creating a release
+  packages: write # for publishing containers
+  id-token: write # for using OIDC tokens
+
+env:
+  SYFT_VERSION: "0.68.1"
+  IMAGE_NAME: seedwing-enforcer
+
+jobs:
+
+  init:
+    runs-on: ubuntu-22.04
+    outputs:
+      version: ${{steps.version.outputs.version}}
+      prerelease: ${{steps.state.outputs.prerelease}}
+    steps:
+      - name: Evaluate state
+        id: state
+        run: |
+          test -z "${{github.head_ref}}" && (echo 'do-publish=true' >> $GITHUB_OUTPUT)
+          if [[ "${{ github.event.ref }}" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo release=true >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event.ref }}" =~ ^refs/tags/v.*$ ]]; then
+              echo prerelease=true >> $GITHUB_OUTPUT
+          fi
+      - name: Set version
+        id: version
+        run: |
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+          [ "$VERSION" == "main" ] && VERSION=latest
+          echo "Version: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+
+  # check that our CI would pass
+  ci:
+    uses: ./.github/workflows/ci.yaml
+
+
+  # now do the actual (release) builds
+  build:
+    needs: [ ci ]
+
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, macos-12, windows-2022]
+        include:
+          - os: ubuntu-22.04
+            suffix: "linux-amd64"
+          - os: macos-12
+            suffix: "macos-amd64"
+          - os: windows-2022
+            suffix: "windows-amd64"
+            exe: ".exe"
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/.crates.toml
+            ~/.cargo/.crates2.json
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build
+        run: cargo build --release
+
+      - name: List output
+        shell: bash
+        run: ls -l target/release/
+
+      - name: Rename server binary
+        shell: bash
+        run: cp -pv target/release/senf${{ matrix.exe }} target/release/senf-${{ matrix.suffix }}${{ matrix.exe }}
+
+      - name: Upload server binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: senf-${{ matrix.suffix }}
+          path: target/release/senf-${{ matrix.suffix }}${{ matrix.exe }}
+          if-no-files-found: error
+
+
+  publish:
+    needs: [ init, build ]
+    runs-on: ubuntu-22.04
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      # cache cargo data, not because of the build, but because of cargo based tooling
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/.crates.toml
+            ~/.cargo/.crates2.json
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          # although we don't use anything from the Cargo project, we still keep hashing the .lock file to get some
+          # id that aligns with the project
+          key: ${{ runner.os }}-cargo-publish-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install cyclonedx cli
+        run: |
+          curl -sLO https://github.com/CycloneDX/cyclonedx-cli/releases/download/v0.24.2/cyclonedx-linux-x64
+          sudo install cyclonedx-linux-x64 /usr/local/bin/cyclonedx
+          cyclonedx --version
+
+      - name: Install convco
+        run: |
+          curl -sLO https://github.com/convco/convco/releases/download/v0.4.0/convco-ubuntu.zip
+          unzip convco-ubuntu.zip
+          chmod a+x convco
+          sudo mv convco /usr/local/bin
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v2
+
+      - name: Check cosign
+        run: cosign version
+
+      - name: Generate changelog
+        run: |
+          convco changelog -s --max-majors=1 --max-minors=1 --max-patches=1 > /tmp/changelog.md
+
+      - uses: actions/download-artifact@v3
+        with:
+          path: ~/download
+
+      - name: Display downloaded content
+        run: ls -R ~/download
+
+      - name: Stage release
+        run: |
+          mkdir -p staging
+          cp -pv ~/download/*/senf-* staging/
+
+      - name: Create SBOM of the cargo projects
+        # create SBOM from source project
+        run: |
+          cargo install cargo-cyclonedx
+          cargo cyclonedx --all --format json
+          cp seedwing-enforcer-cli/bom.json staging/cli.project.sbom.json
+
+      - name: Cosign blobs
+        env:
+          COSIGN_EXPERIMENTAL: "1"
+        run: |
+          for i in $(ls staging/senf*); do
+            cosign sign-blob --yes --b64=false ${i} --output-signature ${i}.cosign.sig --output-certificate ${i}.cosign.crt
+          done
+
+      - name: Display staging area
+        run: ls -R staging
+
+      - name: Create Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: v${{ needs.init.outputs.version }}
+        run: |
+          OPTS=""
+          if [[ "${{ needs.init.outputs.prerelease }}" == "true" ]]; then
+            OPTS="${OPTS} -p"
+          fi
+          gh release create ${OPTS} --title "${{ needs.init.outputs.version }}" -F /tmp/changelog.md ${TAG} \
+            $(find staging -type f)
