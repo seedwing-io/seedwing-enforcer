@@ -14,9 +14,13 @@ import {
 import { EnforcerDependenciesProvider } from "./deps";
 import { SeedwingReport, UpdatedDependencies } from "./data";
 import { Report } from "./report";
+
+/*
 import { ServiceConnection } from '@vscode/sync-api-common/node';
-import { ApiService, Requests } from '@vscode/sync-api-service';
+import {ApiService, ApiServiceConnection, Requests, ServicePseudoTerminal} from '@vscode/sync-api-service';
 import * as path from 'path';
+import { Worker } from 'worker_threads';
+ */
 
 let client: LanguageClient;
 
@@ -38,26 +42,6 @@ function serverOptionsNative(context: ExtensionContext): ServerOptions {
         debug: run,
     };
 }
-
-/*
-function serverOptionsWasi(context: ExtensionContext): ServerOptions {
-    return async () => {
-        const worker = new Worker(path.join(__dirname, "server.js"));
-        const connection = new ServiceConnection<Requests>(worker);
-        const apiService = new ApiService(name, connection, {
-            exitHandler: (_rval) => {
-                process.nextTick(() => worker.terminate());
-            }
-        });
-
-        apiService.signalReady();
-
-        return {
-            detached: true,
-        };
-    };
-}
-*/
 
 async function startLsp(context: ExtensionContext): Promise<LanguageClient> {
     const traceOutputChannel = window.createOutputChannel("Seedwing Enforcer Language Server trace");

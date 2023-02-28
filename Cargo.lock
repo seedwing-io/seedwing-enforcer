@@ -336,6 +336,43 @@ dependencies = [
 ]
 
 [[package]]
+name = "clap"
+version = "4.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2f3061d6db6d8fcbbd4b05e057f2acace52e64e96b498c08c2d7a4e65addd340"
+dependencies = [
+ "bitflags",
+ "clap_derive",
+ "clap_lex",
+ "is-terminal",
+ "once_cell",
+ "strsim",
+ "termcolor",
+]
+
+[[package]]
+name = "clap_derive"
+version = "4.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "34d122164198950ba84a918270a3bb3f7ededd25e15f7451673d986f55bd2667"
+dependencies = [
+ "heck",
+ "proc-macro-error",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "clap_lex"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "350b9cf31731f9957399229e9b2adc51eeabdfbe9d71d9a0552275fd12710d09"
+dependencies = [
+ "os_str_bytes",
+]
+
+[[package]]
 name = "codespan-reporting"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1664,6 +1701,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "os_str_bytes"
+version = "6.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9b7820b9daea5457c9f21c69448905d723fbd21136ccf521748f23fd49e723ee"
+
+[[package]]
 name = "p256"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2408,29 +2451,20 @@ dependencies = [
 ]
 
 [[package]]
-name = "seedwing-enforcer-lsp"
+name = "seedwing-enforcer-cli"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-trait",
- "cyclonedx-bom",
+ "clap",
  "env_logger",
  "log",
- "quick-xml",
- "ropey",
- "roxmltree",
  "seedwing-enforcer",
  "seedwing-enforcer-lsp-common",
  "seedwing-policy-engine",
- "serde",
- "serde_json",
- "serde_yaml",
  "thiserror",
  "tokio",
- "tokio-util",
  "tower-lsp",
- "url",
- "walkdir",
 ]
 
 [[package]]

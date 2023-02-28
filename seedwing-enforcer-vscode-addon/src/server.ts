@@ -11,8 +11,6 @@ import { ClientConnection } from '@vscode/sync-api-common/node';
 import { ApiClient, ApiClientConnection, Requests } from '@vscode/sync-api-client';
 import { WASI, DeviceDescription } from '@vscode/wasm-wasi/node';
 
-console.log("Starting WASI server");
-
 if (parentPort === null) {
     process.exit();
 }
@@ -40,15 +38,22 @@ apiClient.serviceReady().then(async (params) => {
     const wasi = WASI.create("Seedwing LSP server", apiClient, exitHandler, devices, params.stdio);
     // The file contain the web assembly code
     // const wasmFile = path.join(__dirname, 'hello.wasm');
-    const wasmFile = path.join(__dirname, '..', 'seedwing-enforcer-lsp-wasi', 'target', 'wasm32-wasi', 'debug', 'seedwing_enforcer_lsp_wasi.wasm');
+    const wasmFile = path.join(__dirname, '..', '..', 'seedwing-enforcer-lsp-wasi', 'target', 'wasm32-wasi', 'debug', 'seedwing_enforcer_lsp_wasi.wasm');
     const binary = fs.readFileSync(wasmFile);
     // Create a web assembly instance from the wasm file using the
     // provided WASI implementation.
+    console.log("Pre inst");
     const { instance } = await WebAssembly.instantiate(binary, {
         wasi_snapshot_preview1: wasi
     });
+    console.log("Pre init");
     wasi.initialize(instance);
+    console.log("Post init");
     // Run the web assembly
-    (instance.exports._start as Function)();
+    // (instance.exports._start as Function)();
+    //const config = new ServerConfig();
+    console.log("Config", instance.exports.ServerConfig);
+    const config = (instance.exports.ServerConfig as Object).constructor();
+    (instance.exports.serve as Function)(config);
     apiClient.process.procExit(0);
 }).catch(console.error);

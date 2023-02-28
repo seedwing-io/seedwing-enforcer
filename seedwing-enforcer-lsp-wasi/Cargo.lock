@@ -223,6 +223,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "console_error_panic_hook"
+version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a06aeb73f470f66dcdbf7223caeebb85984942f22f1adb2a088cf9668146bbbc"
+dependencies = [
+ "cfg-if",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "const-random"
 version = "0.1.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -451,6 +461,7 @@ checksum = "13e2792b0ff0340399d58445b88fd9770e3489eff258a4cbc1523418f12abf84"
 dependencies = [
  "futures-channel",
  "futures-core",
+ "futures-executor",
  "futures-io",
  "futures-sink",
  "futures-task",
@@ -472,6 +483,17 @@ name = "futures-core"
 version = "0.3.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec90ff4d0fe1f57d600049061dc6bb68ed03c7d2fbd697274c41805dcb3f8608"
+
+[[package]]
+name = "futures-executor"
+version = "0.3.26"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e8de0a35a6ab97ec8869e32a2473f4b1324459e14c29275d14b10cb1fd19b50e"
+dependencies = [
+ "futures-core",
+ "futures-task",
+ "futures-util",
+]
 
 [[package]]
 name = "futures-io"
@@ -1303,12 +1325,39 @@ dependencies = [
 ]
 
 [[package]]
+name = "seedwing-enforcer-lsp-common"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "log",
+ "roxmltree",
+ "seedwing-enforcer",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "thiserror",
+ "tokio",
+ "tokio-util",
+ "tower-lsp",
+ "url",
+ "walkdir",
+]
+
+[[package]]
 name = "seedwing-enforcer-lsp-wasi"
 version = "0.1.0"
 dependencies = [
+ "console_error_panic_hook",
+ "futures",
  "getrandom",
+ "js-sys",
  "seedwing-enforcer",
+ "seedwing-enforcer-lsp-common",
  "tower-lsp",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
 ]
 
 [[package]]
@@ -1869,6 +1918,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f219e0d211ba40266969f6dbdd90636da12f75bee4fc9d6c23d1260dadb51454"
 dependencies = [
  "cfg-if",
+ "futures-core",
  "js-sys",
  "wasm-bindgen",
  "web-sys",

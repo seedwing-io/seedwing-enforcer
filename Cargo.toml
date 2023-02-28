@@ -5,7 +5,7 @@ seedwing-policy-engine = { git = "https://github.com/seedwing-io/seedwing-policy
 [workspace]
 members = [
     "seedwing-enforcer",
-    "seedwing-enforcer-lsp",
+    "seedwing-enforcer-cli",
     "seedwing-enforcer-lsp-common",
 ]
 exclude = [
