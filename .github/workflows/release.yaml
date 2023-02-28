@@ -117,7 +117,7 @@ jobs:
           if-no-files-found: error
 
   publish:
-    needs: [ init, build ]
+    needs: [ init, build, cargo-cyclonedx ]
     runs-on: ubuntu-22.04
     steps:
 
