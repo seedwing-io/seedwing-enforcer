@@ -91,17 +91,30 @@ jobs:
         shell: bash
         run: ls -l target/release/
 
-      - name: Rename server binary
+      - name: Rename binary
         shell: bash
         run: cp -pv target/release/senf${{ matrix.exe }} target/release/senf-${{ matrix.suffix }}${{ matrix.exe }}
 
-      - name: Upload server binary
+      - name: Upload binary
         uses: actions/upload-artifact@v3
         with:
           name: senf-${{ matrix.suffix }}
           path: target/release/senf-${{ matrix.suffix }}${{ matrix.exe }}
           if-no-files-found: error
 
+  # prepare cargo-cyclonedx in parallel
+  cargo-cyclonedx:
+    needs: [ ci ]
+    runs-on: ubuntu-22.04
+    steps:
+      - name: cargo install cargo-cyclonedx
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: cargo-cyclonedx
+          path: ~/.cargo/bin/cargo-cyclonedx
+          if-no-files-found: error
 
   publish:
     needs: [ init, build ]
@@ -163,10 +176,13 @@ jobs:
           mkdir -p staging
           cp -pv ~/download/*/senf-* staging/
 
+      - name: Move cargo-cyclonedx
+        run: |
+          mv ~/download/cargo-cyclonedx/cargo-cyclonedx ~/.cargo/bin/
+
       - name: Create SBOM of the cargo projects
         # create SBOM from source project
         run: |
-          cargo install cargo-cyclonedx
           cargo cyclonedx --all --format json
           cp seedwing-enforcer-cli/bom.json staging/cli.project.sbom.json
 
