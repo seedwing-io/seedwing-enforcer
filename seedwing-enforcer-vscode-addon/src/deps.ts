@@ -4,7 +4,7 @@ import * as purl from "packageurl-js";
 import {
     Dependency, UpdatedDependencies
 } from "./data";
-import {MarkdownString, ThemeIcon} from "vscode";
+import { MarkdownString, ThemeIcon } from "vscode";
 
 export class EnforcerDependenciesProvider implements vscode.TreeDataProvider<DependencyNode> {
     private dependencies: Array<Dependency>;
@@ -23,14 +23,14 @@ export class EnforcerDependenciesProvider implements vscode.TreeDataProvider<Dep
     update(update: UpdatedDependencies): void {
         // FIXME: handle root information
         this.dependencies = update.dependencies;
-        this.dependencies.sort((a,b)=> {
+        this.dependencies.sort((a, b) => {
             return a.purl.localeCompare(b.purl);
         })
         this.refresh();
     }
 
     getChildren(element?: DependencyNode): DependencyNode[] {
-        console.log("Update:", this.dependencies);
+        console.debug("Update:", this.dependencies);
 
         if (!element) {
             // root
@@ -65,16 +65,16 @@ class DependencyNode extends vscode.TreeItem {
     makeLabels() {
         try {
             const pkg = purl.PackageURL.fromString(this.dependency.purl);
-             this.label = `${pkg.namespace}/${pkg.name}@${pkg.version} (${pkg.type})`;
-             let docs = `$(library) ${pkg.namespace}/**${pkg.name}**@${pkg.version} *(${pkg.type})*\n`;
+            this.label = `${pkg.namespace}/${pkg.name}@${pkg.version} (${pkg.type})`;
+            let docs = `$(library) ${pkg.namespace}/**${pkg.name}**@${pkg.version} *(${pkg.type})*\n`;
 
-             for (const [k,v] of Object.entries(pkg.qualifiers)) {
+            for (const [k, v] of Object.entries(pkg.qualifiers)) {
                 docs += `\n* ${k}: ${v}`;
-             }
+            }
 
-             docs += `\n\nRaw: \`${this.dependency.purl}\``;
+            docs += `\n\nRaw: \`${this.dependency.purl}\``;
 
-             this.tooltip = new MarkdownString(docs, true);
+            this.tooltip = new MarkdownString(docs, true);
         } catch (ex) {
             // fall back to showing the raw string
             this.label = this.dependency.purl;

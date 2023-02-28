@@ -1,17 +1,18 @@
 {
-	"compilerOptions": {
-		"module": "Node16",
-		"moduleResolution": "node16",
-		"skipLibCheck": true,
-		"lib": [
-			"ES2020",
-			"WebWorker"
-		],
-		"types": [
-			"node",
-			"vscode"
-		],
-		"rootDir": "src",
-		"outDir": "dist"
-	}
+  "compilerOptions": {
+    "module": "Node16",
+    "moduleResolution": "node16",
+    "skipLibCheck": true,
+    "lib": [
+      "ES2020",
+      "WebWorker"
+    ],
+    "types": [
+      "node",
+      "vscode"
+    ],
+    "sourceMap": true,
+    "rootDir": "src",
+    "outDir": "out"
+  }
 }

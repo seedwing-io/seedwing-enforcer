@@ -1,19 +1,16 @@
-/* --------------------------------------------------------------------------------------------
- * Copyright (c) Microsoft Corporation. All rights reserved.
- * Licensed under the MIT License. See License.txt in the project root for license information.
- * ------------------------------------------------------------------------------------------ */
-
 import * as vscode from "vscode";
-import { ExtensionContext, window, workspace, } from "vscode";
+import {ExtensionContext, window, workspace} from "vscode";
 import {
     Executable,
     LanguageClient,
     LanguageClientOptions,
     ServerOptions,
+    TransportKind,
 } from "vscode-languageclient/node";
-import { EnforcerDependenciesProvider } from "./deps";
-import { SeedwingReport, UpdatedDependencies } from "./data";
-import { Report } from "./report";
+import {EnforcerDependenciesProvider} from "./deps";
+import {SeedwingReport, UpdatedDependencies} from "./data";
+import {Report} from "./report";
+import {acquire} from "./cli";
 
 /*
 import { ServiceConnection } from '@vscode/sync-api-common/node';
@@ -24,22 +21,33 @@ import { Worker } from 'worker_threads';
 
 let client: LanguageClient;
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function serverOptionsNative(context: ExtensionContext): ServerOptions {
-    const command = process.env.SERVER_PATH || "seedwing-enforcer-lsp";
+async function serverOptionsNative(context: ExtensionContext): Promise<ServerOptions> {
+    const command = (await acquire(context)).path;
+
+    console.log("Using CLI:", command);
+
     const run: Executable = {
         command,
+        args: ["lsp", "--"],
+        transport: TransportKind.stdio,
         options: {
             env: {
                 ...process.env,
-                // eslint-disable-next-line @typescript-eslint/naming-convention
-                RUST_LOG: "debug",
             },
         },
     };
+
+    const debug: Executable = {
+        ...run
+    };
+    debug.options.env["RUST_LOG"] = "debug";
+
+    console.log("Run:", run);
+    console.log("Debug:", debug);
+
     return {
         run,
-        debug: run,
+        debug,
     };
 }
 
@@ -48,8 +56,8 @@ async function startLsp(context: ExtensionContext): Promise<LanguageClient> {
 
     const clientOptions: LanguageClientOptions = {
         documentSelector: [
-            { scheme: "file", pattern: "**/.enforcer.yaml" },
-            { scheme: "file", pattern: "**/pom.xml" }
+            {scheme: "file", pattern: "**/.enforcer.yaml"},
+            {scheme: "file", pattern: "**/pom.xml"}
         ],
         synchronize: {
             fileEvents: [
@@ -65,18 +73,16 @@ async function startLsp(context: ExtensionContext): Promise<LanguageClient> {
         traceOutputChannel,
     };
 
-    const serverOptions = serverOptionsNative(context);
+    const serverOptions = await serverOptionsNative(context);
     //const serverOptions = serverOptionsWasi(context);
 
     // Create the language client and start the client.
-    client = new LanguageClient(
+    return new LanguageClient(
         "seedwing-enforcer-lsp",
         "Seedwing Enforcer",
         serverOptions,
         clientOptions
     );
-
-    return client;
 }
 
 export async function activate(context: ExtensionContext): Promise<void> {
@@ -102,7 +108,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
     );
 
     client.onNotification(UpdatedDependencies.NAME, (params: UpdatedDependencies) => {
-        console.log("Params:", params);
+        console.debug("Params:", params);
         dependencies.update(params);
     });
 
@@ -119,3 +125,4 @@ export function deactivate(): Thenable<void> | undefined {
     }
     return client.stop();
 }
+
