@@ -107,7 +107,7 @@ jobs:
     needs: [ ci ]
     runs-on: ubuntu-22.04
     steps:
-      - name: cargo install cargo-cyclonedx
+      - run: cargo install cargo-cyclonedx
 
       - name: Upload binary
         uses: actions/upload-artifact@v3
