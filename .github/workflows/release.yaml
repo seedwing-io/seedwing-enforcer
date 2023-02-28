@@ -179,6 +179,7 @@ jobs:
       - name: Move cargo-cyclonedx
         run: |
           mv ~/download/cargo-cyclonedx/cargo-cyclonedx ~/.cargo/bin/
+          chmod a+x ~/.cargo/bin/cargo-cyclonedx
 
       - name: Create SBOM of the cargo projects
         # create SBOM from source project
