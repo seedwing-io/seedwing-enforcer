@@ -9,7 +9,7 @@
     "tower-lsp"
   ],
   "repository": {
-    "url": "https://github.com/ctron/seedwing-enforcer-lsp"
+    "url": "https://github.com/seedwing-io/seedwing-enforcer"
   },
   "engines": {
     "vscode": "^1.74.0"
@@ -17,6 +17,9 @@
   "enabledApiProposals": [],
   "activationEvents": [
     "workspaceContains:**/.enforcer.yaml"
+  ],
+  "extensionKind": [
+    "workspace"
   ],
   "main": "./dist/extension.js",
   "contributes": {
