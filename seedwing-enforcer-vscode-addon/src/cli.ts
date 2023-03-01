@@ -1,4 +1,6 @@
 import {ExtensionContext} from "vscode";
+import * as os from "os";
+import * as fs from "fs";
 
 export interface Cli {
     path: string,
@@ -13,9 +15,29 @@ export async function acquire(context: ExtensionContext): Promise<Cli> {
         }
     }
 
-    // TODO: allow configuring this
+    let name;
 
-    return {
-        path: context.asAbsolutePath("cli/senf")
+    // FIXME: need to handle non-amd64 targets
+    const target = `${os.platform()}-${os.machine()}`;
+    switch (target) {
+        case "win32-amd64":
+            name = "senf-windows-amd64.exe";
+            break;
+        case "darwin-amd64":
+        case "darwin-aarch64":
+        case "darwin-arm64":
+            name = "senf-macos-amd64";
+            break;
+        case "linux-amd64":
+            name = "senf-linux-amd64";
+            break;
+        default:
+            throw `Unsupported target: ${target}`;
     }
+
+    const path = context.asAbsolutePath("cli/" + name);
+
+    fs.chmodSync(path, "0755");
+
+    return { path };
 }
