@@ -1,8 +1,9 @@
 {
   "name": "seedwing-enforcer-lsp",
-  "description": "seedwing enforcer language server",
+  "description": "Seedwing Enforcer Addon",
   "license": "Apache-2.0",
   "version": "1.0.0",
+  "publisher": "ctron",
   "categories": [],
   "keywords": [
     "language-server",
