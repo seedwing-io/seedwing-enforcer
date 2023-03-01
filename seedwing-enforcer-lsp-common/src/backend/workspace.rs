@@ -83,12 +83,14 @@ impl Inner {
     ) {
         for path in removed {
             if let Some(path) = as_path(&path.uri) {
+                log::info!("Remove folder: {}", path.display());
                 self.folders.remove(&path);
             }
         }
 
         for path in added {
             if let Some(path) = as_path(&path.uri) {
+                log::info!("Add folder: {}", path.display());
                 self.folders.insert(
                     path.to_path_buf(),
                     Folder::new(self.client.clone(), path.into(), self.pool.clone()).await,
