@@ -41,13 +41,35 @@ impl Generator for MavenGenerator {
     }
 }
 
+#[cfg(not(target_os="windows"))]
+const MVN_WRAPPER: &str = "mvnw";
+#[cfg(target_os="windows")]
+const MVN_WRAPPER: &str = "mvnw.cmd";
+
 impl MavenGenerator {
     pub fn new(root: impl Into<PathBuf>) -> Self {
         Self { root: root.into() }
     }
 
+    fn find_mvn(&self) -> anyhow::Result<PathBuf> {
+        if let Ok(mvn) = which::which("mvn") {
+            return Ok(mvn);
+        }
+
+        let mvnw = self.root.join(MVN_WRAPPER);
+        log::debug!("Checking existence: {}", mvnw.display());
+        if mvnw.exists() {
+            return Ok(mvnw);
+        }
+
+        Err(anyhow!("could not find 'mvn' command"))
+    }
+
     fn run(&self) -> anyhow::Result<Vec<u8>> {
-        let output = Command::new("mvn")
+
+        let mvn = self.find_mvn()?;
+
+        let output = Command::new(mvn)
             .current_dir(&self.root)
             .args([
                 "org.cyclonedx:cyclonedx-maven-plugin:2.7.1:makeAggregateBom",
