@@ -18,17 +18,16 @@ export async function acquire(context: ExtensionContext): Promise<Cli> {
     let name;
 
     // FIXME: need to handle non-amd64 targets
-    const target = `${os.platform()}-${os.machine()}`;
+    const target = `${os.platform()}-${os.arch()}`;
     switch (target) {
-        case "win32-amd64":
+        case "win32-x64":
             name = "senf-windows-amd64.exe";
             break;
-        case "darwin-amd64":
-        case "darwin-aarch64":
+        case "darwin-x64":
         case "darwin-arm64":
             name = "senf-macos-amd64";
             break;
-        case "linux-amd64":
+        case "linux-x64":
             name = "senf-linux-amd64";
             break;
         default:
