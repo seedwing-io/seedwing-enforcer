@@ -1,5 +1,14 @@
 .PHONY: all
+ifeq($(DOWNLOAD_BASE),)
 all: fetch
+else
+all: copy
+endif
+
+.PHONY: copy
+copy:
+	mkdir -p cli
+	cp -av $(DOWNLOAD_BASE)/*/senf-* cli/
 
 .PHONY: fetch
 fetch:

@@ -116,8 +116,46 @@ jobs:
           path: ~/.cargo/bin/cargo-cyclonedx
           if-no-files-found: error
 
+  build-vsix:
+    needs: [ init, build ]
+    runs-on: ubuntu-22.04
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - run: npm ci
+        working-directory: seedwing-enforcer-vscode-addon
+
+      - uses: actions/download-artifact@v3
+        with:
+          path: ~/download
+
+      - name: Display downloaded content
+        run: ls -R ~/download
+
+      - name: build addon
+        working-directory: seedwing-enforcer-vscode-addon
+        env:
+          DOWNLOAD_BASE: ~/download
+        run: |
+          npm run package:local
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: senf.vsix
+          path: seedwing-enforcer-vscode-addon/dist/senf.vsix
+          if-no-files-found: error
+
   publish:
-    needs: [ init, build, cargo-cyclonedx ]
+    needs: [ init, build, cargo-cyclonedx, build-vsix ]
     runs-on: ubuntu-22.04
     steps:
 
@@ -175,6 +213,10 @@ jobs:
         run: |
           mkdir -p staging
           cp -pv ~/download/*/senf-* staging/
+
+      - name: Stage VScode addon
+        run: |
+          cp -pv ~/download/*/senf.vsix staging/
 
       - name: Move cargo-cyclonedx
         run: |
