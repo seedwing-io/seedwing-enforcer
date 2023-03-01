@@ -11,12 +11,8 @@ use tower_lsp::lsp_types::{
 use tower_lsp::Client;
 use url::Url;
 
-fn as_path(url: &Url) -> Option<&Path> {
-    if url.scheme() == "file" {
-        Some(Path::new(url.path()))
-    } else {
-        None
-    }
+fn as_path(url: &Url) -> Option<PathBuf> {
+    url.to_file_path().ok()
 }
 
 /// A workspace, managing attached folders
@@ -87,7 +83,7 @@ impl Inner {
     ) {
         for path in removed {
             if let Some(path) = as_path(&path.uri) {
-                self.folders.remove(path);
+                self.folders.remove(&path);
             }
         }
 
@@ -109,7 +105,7 @@ impl Inner {
         if let Some(path) = as_path(path) {
             for (root, folder) in &mut self.folders {
                 if path.starts_with(root) {
-                    folder.changed(path).await;
+                    folder.changed(&path).await;
                 }
             }
         }
@@ -121,7 +117,7 @@ impl Inner {
         if let Some(path) = as_path(path) {
             for (root, folder) in &self.folders {
                 if path.starts_with(root) {
-                    result.extend(folder.code_lens(path).await?);
+                    result.extend(folder.code_lens(&path).await?);
                 }
             }
         }
@@ -140,7 +136,7 @@ impl Inner {
         if let Some(path) = as_path(path) {
             for (root, folder) in &self.folders {
                 if path.starts_with(root) {
-                    result.extend(folder.code_action(path, range, context).await?);
+                    result.extend(folder.code_action(&path, range, context).await?);
                 }
             }
         }
@@ -250,5 +246,16 @@ impl Folder {
         }
 
         Ok(result)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::backend::workspace::as_path;
+    use url::Url;
+
+    #[test]
+    fn test() {
+        assert_eq!(as_path(&Url::parse("file:/foo/bar").unwrap()), "/foo/bar");
     }
 }
