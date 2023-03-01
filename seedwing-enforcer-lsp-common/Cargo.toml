@@ -21,3 +21,7 @@ walkdir = "2"
 roxmltree = "0.18.0"
 
 seedwing-enforcer = { path = "../seedwing-enforcer" }
+
+[dev-dependencies]
+tokio = { version = "*", features = ["full"] }
+tower-lsp = { version = "*", default-features = true }
