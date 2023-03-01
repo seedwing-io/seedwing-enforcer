@@ -41,9 +41,9 @@ impl Generator for MavenGenerator {
     }
 }
 
-#[cfg(not(target_os="windows"))]
+#[cfg(not(target_os = "windows"))]
 const MVN_WRAPPER: &str = "mvnw";
-#[cfg(target_os="windows")]
+#[cfg(target_os = "windows")]
 const MVN_WRAPPER: &str = "mvnw.cmd";
 
 impl MavenGenerator {
@@ -66,7 +66,6 @@ impl MavenGenerator {
     }
 
     fn run(&self) -> anyhow::Result<Vec<u8>> {
-
         let mvn = self.find_mvn()?;
 
         let output = Command::new(mvn)
