@@ -1,5 +1,5 @@
 {
-  "name": "seedwing-enforcer-lsp",
+  "name": "seedwing-enforcer",
   "description": "Seedwing Enforcer Addon",
   "license": "Apache-2.0",
   "version": "1.0.0",
@@ -26,9 +26,9 @@
   "contributes": {
     "configuration": {
       "type": "object",
-      "title": "seedwing-enforcer-lsp",
+      "title": "Seedwing Enforcer",
       "properties": {
-        "seedwing-enforcer-lsp.trace.server": {
+        "seedwing-enforcer.trace.server": {
           "type": "string",
           "scope": "window",
           "enum": [
@@ -43,6 +43,12 @@
           ],
           "default": "off",
           "description": "Traces the communication between VS Code and the language server."
+        },
+        "seedwing-enforcer.cli.path": {
+          "type": "string",
+          "default": "",
+          "scope": "machine-overridable",
+          "description": "Path to the Seedwing Enforcer CLI. The default is to use the packaged binary."
         }
       }
     },

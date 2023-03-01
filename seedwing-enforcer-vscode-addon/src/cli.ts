@@ -1,6 +1,7 @@
-import {ExtensionContext} from "vscode";
+import { ExtensionContext, workspace } from "vscode";
 import * as os from "os";
 import * as fs from "fs";
+import * as vscode from "vscode";
 
 export interface Cli {
     path: string,
@@ -8,10 +9,20 @@ export interface Cli {
 
 /// Fetch the CLI (if required) and return its path
 export async function acquire(context: ExtensionContext): Promise<Cli> {
+
     const fromEnv = process.env.SENF_BIN || process.env.SERVER_PATH;
     if (fromEnv !== undefined) {
         return {
             path: fromEnv
+        }
+    }
+
+    const config = workspace.getConfiguration("seedwing-enforcer", vscode.workspace.workspaceFolders[0].uri);
+    const fromConfig = config.get("cli.path");
+    console.info(`Enforcer CLI config: ${fromConfig}`);
+    if (fromConfig !== undefined && typeof fromConfig == "string" && fromConfig !== "") {
+        return {
+            path: fromConfig
         }
     }
 
