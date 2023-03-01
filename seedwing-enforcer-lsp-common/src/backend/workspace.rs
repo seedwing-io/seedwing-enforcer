@@ -255,9 +255,10 @@ impl Folder {
 mod test {
     use crate::backend::workspace::as_path;
     use url::Url;
+    use std::path::PathBuf;
 
     #[test]
     fn test() {
-        assert_eq!(as_path(&Url::parse("file:/foo/bar").unwrap()), "/foo/bar");
+        assert_eq!(as_path(&Url::parse("file:/foo/bar").unwrap()), Some(PathBuf::from("/foo/bar")));
     }
 }
