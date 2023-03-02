@@ -156,6 +156,9 @@ jobs:
           if [[ -n "${{ matrix.rustTarget }}" ]]; then
             SRC="target/${{ matrix.rustTarget }}/release/senf${{ matrix.exe }}"
           fi
+          if [[ -n "${{ matrix.crossTarget }}" ]]; then
+            SRC="target/${{ matrix.crossTarget }}/release/senf${{ matrix.exe }}"
+          fi
           
           # for upload
           cp -pv "${SRC}" upload/senf-${{ matrix.target }}${{ matrix.exe }}
