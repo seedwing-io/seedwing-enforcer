@@ -1,7 +1,7 @@
 .PHONY: all
 all: fetch
 
-VERSION ?= "0.1.0-alpha.6"
+VERSION ?= 0.1.0-alpha.7
 
 TARGETS = linux-amd64 linux-aarch64 macos-amd64 macos-aarch64 windows-amd64
 
@@ -22,4 +22,5 @@ publish:
 	for i in $(TARGETS); do \
 		curl --fail -sSLO https://github.com/seedwing-io/seedwing-enforcer/releases/download/v$(VERSION)/senf-$${i}.vsix ; \
 	done
+	cd staging && \
 	vsce publish -i $(addsuffix .vsix, $(addprefix senf-, $(TARGETS)))
