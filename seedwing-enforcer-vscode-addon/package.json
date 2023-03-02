@@ -69,9 +69,9 @@
     "lint": "eslint src --ext ts",
     "pretest": "npm run compile && npm run lint",
     "test": "node ./out/test/runTest.js",
-    "package": "make && webpack --mode production --devtool hidden-source-map",
-    "package:local": "vsce package -o dist/senf.vsix",
-    "publish": "vsce publish --no-dependencies"
+    "package": "make && npx webpack --mode production --devtool hidden-source-map",
+    "package:local": "npx vsce package -o dist/senf.vsix",
+    "publish": "npx vsce publish --no-dependencies"
   },
   "devDependencies": {
     "@electron/rebuild": "^3.2.10",
