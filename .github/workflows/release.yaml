@@ -51,7 +51,7 @@ jobs:
 
   # now do the actual (release) builds
   build:
-    needs: [ ci ]
+    needs: [ init, ci ]
 
     strategy:
       matrix:
@@ -59,10 +59,13 @@ jobs:
         include:
           - os: ubuntu-22.04
             suffix: "linux-amd64"
+            vscodeTarget: "linux-x64"
           - os: macos-12
             suffix: "macos-amd64"
+            vscodeTarget: "darwin-x64"
           - os: windows-2022
-            suffix: "windows-amd64"
+            suffix: "windows-x64"
+            vscodeTarget: "win32-x64"
             exe: ".exe"
     runs-on: ${{ matrix.os }}
 
@@ -84,6 +87,13 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - run: npm ci
+        working-directory: seedwing-enforcer-vscode-addon
+
       - name: Build
         run: cargo build --release
 
@@ -91,9 +101,23 @@ jobs:
         shell: bash
         run: ls -l target/release/
 
-      - name: Rename binary
+      - name: Copy binary
         shell: bash
-        run: cp -pv target/release/senf${{ matrix.exe }} target/release/senf-${{ matrix.suffix }}${{ matrix.exe }}
+        run: |
+          # for upload
+          cp -pv target/release/senf${{ matrix.exe }} target/release/senf-${{ matrix.suffix }}${{ matrix.exe }}
+          # for vsix
+          mkdir -p seedwing-enforcer-vscode-addon/dist/cli
+          cp -pv target/release/senf${{ matrix.exe }} seedwing-enforcer-vscode-addon/dist/cli/senf-${{ matrix.suffix }}${{ matrix.exe }}
+
+      - name: Build vsix
+        working-directory: seedwing-enforcer-vscode-addon
+        run: |
+          OPTS="--target ${{ matrix.vscodeTarget }}"
+          if [[ "${{ needs.init.outputs.prerelease }}" == "true" ]]; then
+            OPTS="${OPTS} --pre-release"
+          fi
+          npx vsce package ${OPTS} -o dist/senf-${{ matrix.suffix }}.vsix
 
       - name: Upload binary
         uses: actions/upload-artifact@v3
@@ -116,50 +140,8 @@ jobs:
           path: ~/.cargo/bin/cargo-cyclonedx
           if-no-files-found: error
 
-  build-vsix:
-    needs: [ init, build ]
-    runs-on: ubuntu-22.04
-    steps:
-
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16
-
-      - run: npm ci
-        working-directory: seedwing-enforcer-vscode-addon
-
-      - uses: actions/download-artifact@v3
-        with:
-          path: ~/download
-
-      - name: Display downloaded content
-        run: ls -R ~/download
-
-      - name: build addon
-        working-directory: seedwing-enforcer-vscode-addon
-        env:
-          DOWNLOAD_BASE: ~/download
-        run: |
-          OPTS=""
-          if [[ "${{ needs.init.outputs.prerelease }}" == "true" ]]; then
-            OPTS="${OPTS} --pre-release"
-          fi
-          npx vsce package ${OPTS} -o dist/senf.vsix
-
-      - name: Upload binary
-        uses: actions/upload-artifact@v3
-        with:
-          name: senf.vsix
-          path: seedwing-enforcer-vscode-addon/dist/senf.vsix
-          if-no-files-found: error
-
   publish:
-    needs: [ init, build, cargo-cyclonedx, build-vsix ]
+    needs: [ init, build, cargo-cyclonedx ]
     runs-on: ubuntu-22.04
     steps:
 
@@ -216,11 +198,8 @@ jobs:
       - name: Stage release
         run: |
           mkdir -p staging
+          # this includes the binaries a well as the .vsix packages
           cp -pv ~/download/*/senf-* staging/
-
-      - name: Stage VScode addon
-        run: |
-          cp -pv ~/download/*/senf.vsix staging/
 
       - name: Move cargo-cyclonedx
         run: |
