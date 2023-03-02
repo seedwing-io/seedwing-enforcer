@@ -19,7 +19,7 @@ seedwing-policy-engine = "0.1.0-alpha.2"
 seedwing-enforcer = { path = "../seedwing-enforcer" }
 seedwing-enforcer-lsp-common = { path = "../seedwing-enforcer-lsp-common" }
 
-openssl = { version = "*" }
+openssl = { version = "*", optional = true }
 
 [features]
 vendored = [ "openssl/vendored" ]
