@@ -87,6 +87,11 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
+      - name: Parameters
+        shell: bash
+        run: |
+          echo "Pre-release: ${{ needs.init.outputs.prerelease }}"
+
       - name: Checkout
         uses: actions/checkout@v3
         with:
@@ -175,6 +180,7 @@ jobs:
           if [[ "${{ needs.init.outputs.prerelease }}" == "true" ]]; then
             OPTS="${OPTS} --pre-release"
           fi
+          echo "Building with: ${OPTS}"
           npx vsce package ${OPTS} -o dist/senf-${{ matrix.target }}.vsix
 
       - name: Upload binary
