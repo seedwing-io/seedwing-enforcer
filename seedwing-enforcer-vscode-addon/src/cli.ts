@@ -49,7 +49,9 @@ export async function acquire(context: ExtensionContext): Promise<Cli> {
 
     const path = context.asAbsolutePath("cli/" + name);
 
-    fs.chmodSync(path, "0755");
+    if (os.platform() !== "win32") {
+        fs.chmodSync(path, "0755");
+    }
 
     return { path };
 }
