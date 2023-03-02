@@ -112,6 +112,7 @@ jobs:
 
       - name: Build vsix
         working-directory: seedwing-enforcer-vscode-addon
+        shell: bash
         run: |
           OPTS="--target ${{ matrix.vscodeTarget }}"
           if [[ "${{ needs.init.outputs.prerelease }}" == "true" ]]; then
