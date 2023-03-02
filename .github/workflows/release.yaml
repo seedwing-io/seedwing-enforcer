@@ -141,6 +141,13 @@ jobs:
           path: target/release/senf-${{ matrix.target }}${{ matrix.exe }}
           if-no-files-found: error
 
+      - name: Upload vsix
+        uses: actions/upload-artifact@v3
+        with:
+          name: vsix-${{ matrix.target }}
+          path: dist/senf-${{ matrix.target }}.vsix
+          if-no-files-found: error
+
   # prepare cargo-cyclonedx in parallel
   cargo-cyclonedx:
     needs: [ ci ]
