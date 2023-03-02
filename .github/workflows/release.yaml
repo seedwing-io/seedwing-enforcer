@@ -100,7 +100,7 @@ jobs:
         working-directory: seedwing-enforcer-vscode-addon
 
       - run: rustup target add ${{ matrix.rustTarget }}
-        if: ${{ matrix.rustTarget != "" }}
+        if: matrix.rustTarget != ''
 
       - name: Build
         shell: bash
