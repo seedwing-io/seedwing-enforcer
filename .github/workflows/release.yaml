@@ -111,7 +111,7 @@ jobs:
         shell: bash
         run: |
           if [[ "${{ matrix.xcode }}" == "true" ]]; then
-            SDKROOT=$(xcrun -sdk macosx --show-sdk-path) MACOSX_DEPLOYMENT_TARGET=$(xcrun -sdk macosx --show-sdk-platform-version) cargo build --target=${{ matrix.rustTarget }}
+            SDKROOT=$(xcrun -sdk macosx --show-sdk-path) MACOSX_DEPLOYMENT_TARGET=$(xcrun -sdk macosx --show-sdk-platform-version) cargo build --release --target=${{ matrix.rustTarget }}
           else
             cargo build --release
           fi
