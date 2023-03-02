@@ -75,7 +75,8 @@
     "pretest": "npm run compile && npm run lint",
     "test": "node ./out/test/runTest.js",
     "package:webpack": "npx webpack --mode production --devtool hidden-source-map",
-    "package": "npx vsce package -o dist/senf.vsix"
+    "package": "npx vsce package -o dist/senf.vsix",
+    "vsce-version": "npm run test-compile && node ./out/version.js"
   },
   "devDependencies": {
     "@electron/rebuild": "^3.2.10",
@@ -96,7 +97,9 @@
     "vscode-uri": "^3.0.7",
     "webpack": "^5.75.0",
     "webpack-cli": "^5.0.1",
-    "ts-loader": "^9.4.2"
+    "ts-loader": "^9.4.2",
+    "semver": "^7.3.8",
+    "@types/semver": "^7.3.13"
   },
   "dependencies": {
     "vscode-languageclient": "^8.1.0",

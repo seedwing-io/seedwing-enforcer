@@ -181,7 +181,10 @@ jobs:
             OPTS="${OPTS} --pre-release"
           fi
           echo "Building with: ${OPTS}"
-          npx vsce package ${OPTS} -o dist/senf-${{ matrix.target }}.vsix
+          
+          version=$(npm run --silent vsce-version -- "${{ need.init.output.version }}")
+          echo "Setting version to: ${version}"
+          npx vsce package ${OPTS} -o dist/senf-${{ matrix.target }}.vsix --no-git-tag-version --no-update-package-json "${version}"
 
       - name: Upload binary
         uses: actions/upload-artifact@v3
