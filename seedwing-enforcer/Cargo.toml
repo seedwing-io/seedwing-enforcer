@@ -22,7 +22,7 @@ which = "4"
 
 roxmltree = "0.18.0"
 
-seedwing-policy-engine = { version = "0.1.0-alpha.2", default-features = false, features = [] }
+seedwing-policy-engine = { version = "0.1.0-alpha.9", default-features = false, features = [] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 tokio-util = { version = "0.7.4", features = ["rt"] }

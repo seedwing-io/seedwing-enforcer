@@ -14,8 +14,6 @@ tokio = { version = "1.17.0", features = ["full"] }
 tower-lsp = { version = "0.18.0" }
 clap = { version = "4.1.7", features = ["derive", "env"] }
 
-seedwing-policy-engine = "0.1.0-alpha.2"
-
 seedwing-enforcer = { path = "../seedwing-enforcer" }
 seedwing-enforcer-lsp-common = { path = "../seedwing-enforcer-lsp-common" }
 

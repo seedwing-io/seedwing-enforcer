@@ -249,7 +249,7 @@ impl<'a> From<DiagnosticConverter<'a>> for Diagnostic {
         let message = match value.1 {
             BuildError::Parser(_, err) => err.to_string(),
             BuildError::ArgumentMismatch(_, _) => "Argument mismatch".into(),
-            BuildError::TypeNotFound(_, _, r#type) => format!("Type not found: {type}"),
+            BuildError::PatternNotFound(_, _, r#type) => format!("Pattern not found: {type}"),
         };
 
         let message = format!("{} ({:?})", message, span);

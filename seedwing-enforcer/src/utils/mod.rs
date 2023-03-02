@@ -1,12 +1,11 @@
 use lsp_types::{Position, Range};
 use ropey::Rope;
-use seedwing_policy_engine::lang::parser::SourceSpan;
 
 pub mod pool;
 pub mod rationale;
 
-pub fn span_to_range(content: &Rope, span: SourceSpan) -> Option<Range> {
-    fn convert(content: &Rope, span: SourceSpan) -> Result<Range, ropey::Error> {
+pub fn span_to_range(content: &Rope, span: std::ops::Range<usize>) -> Option<Range> {
+    fn convert(content: &Rope, span: std::ops::Range<usize>) -> Result<Range, ropey::Error> {
         let start_line = content.try_char_to_line(span.start)?;
         let start_pos = span.start - content.try_line_to_char(start_line)?;
 
