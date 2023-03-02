@@ -145,7 +145,11 @@ jobs:
         env:
           DOWNLOAD_BASE: ~/download
         run: |
-          npm run package:local
+          OPTS=""
+          if [[ "${{ needs.init.outputs.prerelease }}" == "true" ]]; then
+            OPTS="${OPTS} --pre-release"
+          fi
+          npx vsce package ${OPTS} -o dist/senf.vsix
 
       - name: Upload binary
         uses: actions/upload-artifact@v3
