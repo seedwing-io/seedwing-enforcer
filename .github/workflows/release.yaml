@@ -118,16 +118,25 @@ jobs:
 
       - name: List output
         shell: bash
-        run: ls -l target/release/
+        run: ls -lR target/
 
       - name: Copy binary
         shell: bash
         run: |
+          mkdir -p upload
+          SRC="target/release/senf${{ matrix.exe }}"
+          
+          # if we have an alternate target, there is a sub-directory
+          if [[ -n "${{ matrix.rustTarget }}" ]]; then
+            SRC="target/${{ matrix.rustTarget }}/release/senf${{ matrix.exe }}"
+          fi
+          
           # for upload
-          cp -pv target/release/senf${{ matrix.exe }} target/release/senf-${{ matrix.target }}${{ matrix.exe }}
+          cp -pv "${SRC}" upload/senf-${{ matrix.target }}${{ matrix.exe }}
+          
           # for vsix
           mkdir -p seedwing-enforcer-vscode-addon/dist/cli
-          cp -pv target/release/senf${{ matrix.exe }} seedwing-enforcer-vscode-addon/dist/cli/senf-${{ matrix.target }}${{ matrix.exe }}
+          cp -pv "${SRC}" seedwing-enforcer-vscode-addon/dist/cli/senf-${{ matrix.target }}${{ matrix.exe }}
 
       - name: Build vsix
         working-directory: seedwing-enforcer-vscode-addon
@@ -143,7 +152,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: senf-${{ matrix.target }}
-          path: target/release/senf-${{ matrix.target }}${{ matrix.exe }}
+          path: upload/senf-${{ matrix.target }}${{ matrix.exe }}
           if-no-files-found: error
 
       - name: Upload vsix
