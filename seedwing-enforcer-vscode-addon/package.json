@@ -69,7 +69,7 @@
     "lint": "eslint src --ext ts",
     "pretest": "npm run compile && npm run lint",
     "test": "node ./out/test/runTest.js",
-    "package": "make && npx webpack --mode production --devtool hidden-source-map",
+    "package": "npx webpack --mode production --devtool hidden-source-map",
     "package:local": "npx vsce package -o dist/senf.vsix",
     "publish": "npx vsce publish --no-dependencies"
   },
