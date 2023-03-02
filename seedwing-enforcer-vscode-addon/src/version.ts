@@ -12,7 +12,7 @@ import * as semver from 'semver';
 // This gives us a range of 1000 (zero based) numbers for each type, and we define three types (alpha, beta, rc), which
 // should be more than enough. Adding the original patch version on top, we have an incrementing representation.
 
-const version = process.env.VERSION || process.argv[1];
+const version = process.env.VERSION || process.argv[2];
 
 const v = semver.parse(version);
 
