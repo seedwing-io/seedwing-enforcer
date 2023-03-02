@@ -15,7 +15,6 @@
   "engines": {
     "vscode": "^1.74.0"
   },
-  "enabledApiProposals": [],
   "activationEvents": [
     "workspaceContains:**/.enforcer.yaml"
   ],
