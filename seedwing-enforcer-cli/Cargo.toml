@@ -19,6 +19,11 @@ seedwing-policy-engine = "0.1.0-alpha.2"
 seedwing-enforcer = { path = "../seedwing-enforcer" }
 seedwing-enforcer-lsp-common = { path = "../seedwing-enforcer-lsp-common" }
 
+openssl = { version = "*" }
+
+[features]
+vendored = [ "openssl/vendored" ]
+
 [[bin]]
 name = "senf"
 path = "src/main.rs"

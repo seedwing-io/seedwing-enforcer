@@ -57,6 +57,7 @@ jobs:
       matrix:
         target:
           - linux-amd64
+          - linux-aarch64
           - macos-amd64
           - macos-aarch64
           - windows-amd64
@@ -64,6 +65,12 @@ jobs:
           - target: linux-amd64
             os: ubuntu-22.04
             vscodeTarget: "linux-x64"
+            features: "vendored"
+          - target: linux-aarch64
+            os: ubuntu-22.04
+            vscodeTarget: "linux-arm64"
+            crossTarget: "aarch64-unknown-linux-gnu"
+            features: "vendored"
           - target: macos-amd64
             os: macos-12
             vscodeTarget: "darwin-x64"
@@ -111,10 +118,29 @@ jobs:
         shell: bash
         run: |
           if [[ "${{ matrix.xcode }}" == "true" ]]; then
-            SDKROOT=$(xcrun -sdk macosx --show-sdk-path) MACOSX_DEPLOYMENT_TARGET=$(xcrun -sdk macosx --show-sdk-platform-version) cargo build --release --target=${{ matrix.rustTarget }}
-          else
-            cargo build --release
+            export SDKROOT=$(xcrun -sdk macosx --show-sdk-path)
+            export MACOSX_DEPLOYMENT_TARGET=$(xcrun -sdk macosx --show-sdk-platform-version)
           fi
+          
+          OPTS="--release"
+          
+          if [[ -n "${{ matrix.rustTarget }}" ]]; then
+            OPTS="$OPTS --target=${{ matrix.rustTarget }}"
+          fi
+          
+          if [[ -n "${{ matrix.features }}" ]]; then
+            OPTS="$OPTS --features=${{ matrix.features }}"
+          fi
+          
+          CMD="cargo"
+          
+          if [[ -n "${{ matrix.crossTarget }}" ]]; then
+            cargo install cross
+            CMD="cross"
+            OPTS="$OPTS --target=${{ matrix.crossTarget }}"
+          fi
+          
+          ${CMD} build ${OPTS}
 
       - name: List output
         shell: bash
