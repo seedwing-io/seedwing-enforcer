@@ -1,13 +1,16 @@
 {
   "name": "seedwing-enforcer",
+  "displayName": "Seedwing Enforcer",
   "description": "Seedwing Enforcer Addon",
   "license": "Apache-2.0",
   "version": "0.1.0",
   "publisher": "ctron",
-  "categories": [],
+  "categories": [
+    "Programming Languages"
+  ],
   "keywords": [
-    "language-server",
-    "tower-lsp"
+    "seedwing",
+    "policy"
   ],
   "repository": {
     "url": "https://github.com/seedwing-io/seedwing-enforcer"
@@ -20,6 +23,9 @@
   ],
   "extensionKind": [
     "workspace"
+  ],
+  "extensionDependencies": [
+    "ctron.seedwing-dogma-syntax"
   ],
   "main": "./dist/extension.js",
   "contributes": {
