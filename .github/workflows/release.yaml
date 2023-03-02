@@ -182,7 +182,7 @@ jobs:
           fi
           echo "Building with: ${OPTS}"
           
-          version=$(npm run --silent vsce-version -- "${{ need.init.output.version }}")
+          version=$(npm run --silent vsce-version -- "${{ needs.init.outputs.version }}")
           echo "Setting version to: ${version}"
           npx vsce package ${OPTS} -o dist/senf-${{ matrix.target }}.vsix --no-git-tag-version --no-update-package-json "${version}"
 
