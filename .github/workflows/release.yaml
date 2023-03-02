@@ -90,7 +90,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ matrix.suffix }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - uses: actions/setup-node@v3
         with:
