@@ -61,17 +61,22 @@ jobs:
           - macos-aarch64
           - windows-amd64
         include:
-          - os: ubuntu-22.04
+          - target: linux-amd64
+            os: ubuntu-22.04
             vscodeTarget: "linux-x64"
-          - os: macos-12
+          - target: macos-amd64
+            os: macos-12
             vscodeTarget: "darwin-x64"
-          - os: macos-12
+          - target: macos-aarch64
+            os: macos-12
             vscodeTarget: "darwin-arm64"
             rustTarget: "aarch64-apple-darwin"
             xcode: "true"
-          - os: windows-2022
+          - target: windows-amd64
+            os: windows-2022
             vscodeTarget: "win32-x64"
             exe: ".exe"
+
     runs-on: ${{ matrix.os }}
 
     steps:
