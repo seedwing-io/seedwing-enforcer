@@ -15,7 +15,7 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 seedwing-enforcer = { path = "../seedwing-enforcer" }
 seedwing-enforcer-lsp-common = { path = "../seedwing-enforcer-lsp-common" }
-tower-lsp = { version = "0.18.0", default-features = false, features = ["runtime-agnostic"] }
+tower-lsp = { version = "0.19.0", default-features = false, features = ["runtime-agnostic"] }
 
 wasm-bindgen = "0.2.84"
 wasm-bindgen-futures = { version = "0.4.34", features = ["futures-core-03-stream"] }
@@ -38,4 +38,4 @@ features = [
 
 
 [patch.crates-io]
-seedwing-policy-engine = { git = "https://github.com/seedwing-io/seedwing-policy", rev = "53583128136703de9b29a88f5cfdf4e3ae015f67" }
+seedwing-policy-engine = { git = "https://github.com/seedwing-io/seedwing-policy", rev = "bb239416993bf81a141fe5635693cb4a116e5c97" }

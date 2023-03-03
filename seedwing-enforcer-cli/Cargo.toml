@@ -7,12 +7,12 @@ rust-version = "1.66"
 [dependencies]
 anyhow = "1"
 async-trait = "0.1.64"
+clap = { version = "4.1.7", features = ["derive", "env"] }
 env_logger = "0.10.0"
 log = "0.4.14"
 thiserror = "1"
 tokio = { version = "1.17.0", features = ["full"] }
-tower-lsp = { version = "0.18.0" }
-clap = { version = "4.1.7", features = ["derive", "env"] }
+tower-lsp = { version = "0.19.0" }
 
 seedwing-enforcer = { path = "../seedwing-enforcer" }
 seedwing-enforcer-lsp-common = { path = "../seedwing-enforcer-lsp-common" }

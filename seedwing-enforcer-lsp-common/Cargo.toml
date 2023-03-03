@@ -8,17 +8,16 @@ rust-version = "1.66"
 anyhow = "1"
 async-trait = "0.1.64"
 log = "0.4.14"
+roxmltree = "0.18.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.78"
 serde_yaml = "0.9.17"
 thiserror = "1"
 tokio = { version = "1.17.0" }
 tokio-util = { version = "0.7.4", features = ["rt"] }
-tower-lsp = { version = "0.18.0", default-features = false }
+tower-lsp = { version = "0.19.0", default-features = false }
 url = "2.3.1"
 walkdir = "2"
-
-roxmltree = "0.18.0"
 
 seedwing-enforcer = { path = "../seedwing-enforcer" }
 

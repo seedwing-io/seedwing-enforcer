@@ -864,6 +864,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "lsp-types"
+version = "0.94.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0b63735a13a1f9cd4f4835223d828ed9c2e35c8c5e61837774399f558b6a1237"
+dependencies = [
+ "bitflags",
+ "serde",
+ "serde_json",
+ "serde_repr",
+ "url",
+]
+
+[[package]]
 name = "memchr"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1409,7 +1422,7 @@ dependencies = [
  "cyclonedx-bom",
  "env_logger",
  "log",
- "lsp-types",
+ "lsp-types 0.94.0",
  "quick-xml",
  "ropey",
  "roxmltree",
@@ -1440,7 +1453,7 @@ dependencies = [
  "seedwing-enforcer-lsp-common",
  "thiserror",
  "tokio",
- "tower-lsp",
+ "tower-lsp 0.19.0",
 ]
 
 [[package]]
@@ -1458,7 +1471,8 @@ dependencies = [
  "thiserror",
  "tokio",
  "tokio-util",
- "tower-lsp",
+ "tower-lsp 0.18.0",
+ "tower-lsp 0.19.0",
  "url",
  "walkdir",
 ]
@@ -1844,14 +1858,37 @@ dependencies = [
  "dashmap",
  "futures",
  "httparse",
- "lsp-types",
+ "lsp-types 0.93.2",
  "memchr",
  "serde",
  "serde_json",
  "tokio",
  "tokio-util",
  "tower",
- "tower-lsp-macros",
+ "tower-lsp-macros 0.7.0",
+ "tracing",
+]
+
+[[package]]
+name = "tower-lsp"
+version = "0.19.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9b38fb0e6ce037835174256518aace3ca621c4f96383c56bb846cfc11b341910"
+dependencies = [
+ "async-trait",
+ "auto_impl",
+ "bytes",
+ "dashmap",
+ "futures",
+ "httparse",
+ "lsp-types 0.94.0",
+ "memchr",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tokio-util",
+ "tower",
+ "tower-lsp-macros 0.8.0",
  "tracing",
 ]
 
@@ -1860,6 +1897,17 @@ name = "tower-lsp-macros"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "74697a0324a76eedfc784ffef1cc4de2300af19720de3c3fd99cd7ec484479da"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "tower-lsp-macros"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "34723c06344244474fdde365b76aebef8050bf6be61a935b91ee9ff7c4e91157"
 dependencies = [
  "proc-macro2",
  "quote",
