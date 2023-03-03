@@ -169,8 +169,8 @@ jobs:
           cp -pv "${SRC}" upload/senf-${{ matrix.target }}${{ matrix.exe }}
           
           # for vsix
-          mkdir -p seedwing-enforcer-vscode-addon/dist/cli
-          cp -pv "${SRC}" seedwing-enforcer-vscode-addon/dist/cli/senf-${{ matrix.target }}${{ matrix.exe }}
+          mkdir -p seedwing-enforcer-vscode-addon/cli
+          cp -pv "${SRC}" seedwing-enforcer-vscode-addon/cli/senf-${{ matrix.target }}${{ matrix.exe }}
 
       - name: Build vsix
         working-directory: seedwing-enforcer-vscode-addon
