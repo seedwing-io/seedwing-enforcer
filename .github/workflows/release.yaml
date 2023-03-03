@@ -114,7 +114,7 @@ jobs:
           node-version: 16
 
       - run: npm ci
-        working-directory: seedwing-enforcer-vscode-addon
+        working-directory: vscode-addon
 
       - run: rustup target add ${{ matrix.rustTarget }}
         if: matrix.rustTarget != ''
@@ -169,11 +169,11 @@ jobs:
           cp -pv "${SRC}" upload/senf-${{ matrix.target }}${{ matrix.exe }}
           
           # for vsix
-          mkdir -p seedwing-enforcer-vscode-addon/cli
-          cp -pv "${SRC}" seedwing-enforcer-vscode-addon/cli/senf-${{ matrix.target }}${{ matrix.exe }}
+          mkdir -p vscode-addon/cli
+          cp -pv "${SRC}" vscode-addon/cli/senf-${{ matrix.target }}${{ matrix.exe }}
 
       - name: Build vsix
-        working-directory: seedwing-enforcer-vscode-addon
+        working-directory: vscode-addon
         shell: bash
         run: |
           OPTS="--target ${{ matrix.vscodeTarget }}"
@@ -197,7 +197,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: vsix-${{ matrix.target }}
-          path: seedwing-enforcer-vscode-addon/dist/senf-${{ matrix.target }}.vsix
+          path: vscode-addon/dist/senf-${{ matrix.target }}.vsix
           if-no-files-found: error
 
   # prepare cargo-cyclonedx in parallel
@@ -269,7 +269,7 @@ jobs:
         # create SBOM from source project
         run: |
           cargo cyclonedx --all --format json
-          cp seedwing-enforcer-cli/bom.json staging/cli.project.sbom.json
+          cp cli/bom.json staging/cli.project.sbom.json
 
       - name: Cosign blobs
         env:
