@@ -1,14 +1,15 @@
 use crate::backend::project::Project;
-use seedwing_enforcer::utils::pool::Pool;
-use std::collections::hash_map::Entry;
-use std::collections::HashMap;
-use std::path::{Path, PathBuf};
-use std::sync::Arc;
-use tokio::sync::RwLock;
-use tower_lsp::lsp_types::{
-    CodeActionContext, CodeActionOrCommand, CodeLens, Range, WorkspaceFolder,
+use seedwing_enforcer_common::utils::pool::Pool;
+use std::{
+    collections::{hash_map::Entry, HashMap},
+    path::{Path, PathBuf},
+    sync::Arc,
 };
-use tower_lsp::Client;
+use tokio::sync::RwLock;
+use tower_lsp::{
+    lsp_types::{CodeActionContext, CodeActionOrCommand, CodeLens, Range, WorkspaceFolder},
+    Client,
+};
 use url::Url;
 
 fn as_path(url: &Url) -> Option<PathBuf> {

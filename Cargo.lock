@@ -1414,7 +1414,24 @@ dependencies = [
 ]
 
 [[package]]
-name = "seedwing-enforcer"
+name = "seedwing-enforcer-cli"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "clap",
+ "env_logger",
+ "log",
+ "openssl",
+ "seedwing-enforcer-common",
+ "seedwing-enforcer-lsp-common",
+ "thiserror",
+ "tokio",
+ "tower-lsp 0.19.0",
+]
+
+[[package]]
+name = "seedwing-enforcer-common"
 version = "0.1.0"
 dependencies = [
  "anyhow",
@@ -1440,23 +1457,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "seedwing-enforcer-cli"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "clap",
- "env_logger",
- "log",
- "openssl",
- "seedwing-enforcer",
- "seedwing-enforcer-lsp-common",
- "thiserror",
- "tokio",
- "tower-lsp 0.19.0",
-]
-
-[[package]]
 name = "seedwing-enforcer-lsp-common"
 version = "0.1.0"
 dependencies = [
@@ -1464,7 +1464,7 @@ dependencies = [
  "async-trait",
  "log",
  "roxmltree",
- "seedwing-enforcer",
+ "seedwing-enforcer-common",
  "serde",
  "serde_json",
  "serde_yaml",

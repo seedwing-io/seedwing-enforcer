@@ -40,7 +40,7 @@ jobs:
           node-version: 16
 
       - run: npm ci
-        working-directory: seedwing-enforcer-vscode-addon
+        working-directory: vscode-addon
 
       - run: npm run compile
-        working-directory: seedwing-enforcer-vscode-addon
+        working-directory: vscode-addon

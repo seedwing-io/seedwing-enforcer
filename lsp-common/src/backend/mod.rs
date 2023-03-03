@@ -3,11 +3,12 @@
 //! Project: An actual project that we want to work with. Found in the root- or sub-folder.
 
 use crate::backend::workspace::Workspace;
-use std::cell::Cell;
-use std::sync::Mutex;
-use tower_lsp::jsonrpc::{Error, ErrorCode, Result};
-use tower_lsp::lsp_types::*;
-use tower_lsp::{Client, LanguageServer};
+use std::{cell::Cell, sync::Mutex};
+use tower_lsp::{
+    jsonrpc::{Error, ErrorCode, Result},
+    lsp_types::*,
+    Client, LanguageServer,
+};
 
 mod notification;
 mod project;

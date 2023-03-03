@@ -5,7 +5,7 @@ use crate::{
     },
     protocol::{commands::SHOW_REPORT, types::Report},
 };
-use seedwing_enforcer::{
+use seedwing_enforcer_common::{
     enforcer::{
         seedwing::{self, Enforcer},
         source::{

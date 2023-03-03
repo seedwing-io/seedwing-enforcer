@@ -1,11 +1,15 @@
 use crate::backend::project::publisher::{Category, DiagnosticPublisher};
-use seedwing_enforcer::config::FILE_NAME_YAML;
-use seedwing_enforcer::enforcer::seedwing::Enforcer;
-use seedwing_enforcer::utils::pool::Pool;
-use std::collections::HashMap;
-use std::path::{Path, PathBuf};
-use tower_lsp::lsp_types::{CodeActionContext, CodeActionOrCommand, CodeLens, Range};
-use tower_lsp::Client;
+use seedwing_enforcer_common::{
+    config::FILE_NAME_YAML, enforcer::seedwing::Enforcer, utils::pool::Pool,
+};
+use std::{
+    collections::HashMap,
+    path::{Path, PathBuf},
+};
+use tower_lsp::{
+    lsp_types::{CodeActionContext, CodeActionOrCommand, CodeLens, Range},
+    Client,
+};
 
 mod file;
 mod publisher;

@@ -14,8 +14,8 @@ thiserror = "1"
 tokio = { version = "1.17.0", features = ["full"] }
 tower-lsp = { version = "0.19.0" }
 
-seedwing-enforcer = { path = "../seedwing-enforcer" }
-seedwing-enforcer-lsp-common = { path = "../seedwing-enforcer-lsp-common" }
+seedwing-enforcer-common = { path = "../common" }
+seedwing-enforcer-lsp-common = { path = "../lsp-common" }
 
 openssl = { version = "*", optional = true }
 
