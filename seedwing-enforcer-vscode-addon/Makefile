@@ -1,7 +1,7 @@
 .PHONY: all
 all: fetch
 
-VERSION ?= 0.1.0-alpha.8
+VERSION ?= 0.1.0-alpha.10
 
 TARGETS = linux-amd64 linux-aarch64 macos-amd64 macos-aarch64 windows-amd64
 
