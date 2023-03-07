@@ -1,8 +1,10 @@
 use crate::command::lsp::Lsp;
+use crate::command::once::Once;
 
 #[derive(clap::Subcommand, Debug)]
 pub enum Command {
     Lsp(Lsp),
+    Once(Once),
 }
 
 #[derive(clap::Parser, Debug)]
@@ -23,6 +25,7 @@ impl Cli {
 
         match self.command {
             Command::Lsp(command) => command.run().await,
+            Command::Once(once) => once.run().await,
         }
     }
 }
