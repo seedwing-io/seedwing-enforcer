@@ -1,3 +1,4 @@
+use std::fmt::{Display, Formatter};
 use seedwing_policy_engine::value;
 use seedwing_policy_engine::value::serde::to_value;
 use seedwing_policy_engine::value::RuntimeValue;
@@ -18,4 +19,11 @@ impl TryFrom<Dependency> for RuntimeValue {
     fn try_from(value: Dependency) -> Result<Self, Self::Error> {
         to_value(&value)
     }
+}
+
+impl Display for Dependency {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+
+           write!(f, "{}", self.purl)
+        }
 }
