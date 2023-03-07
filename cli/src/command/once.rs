@@ -17,7 +17,6 @@ pub struct Once {
 }
 
 impl Once {
-
     // todo change printlns to a logger ?
     // todo enforcer config option to not wrap rationale in HTML
     pub async fn run(self) -> anyhow::Result<()> {
@@ -49,7 +48,7 @@ impl Once {
                 println!("Scan results:");
                 for (dep, outcome) in scan {
                     println!("{} => {}", dep, outcome);
-                    if ! outcome.is_failed() {
+                    if !outcome.is_failed() {
                         error = true;
                     }
                 }
