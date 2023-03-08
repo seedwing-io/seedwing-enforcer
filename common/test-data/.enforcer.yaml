@@ -1,3 +1,0 @@
-dependencies:
-  policy: /home/jibou/github/seedwing/seedwing-enforcer/common/test-data/enforcer.dog
-  requires: "valid"

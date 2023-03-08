@@ -26,7 +26,7 @@ impl Display for Outcome {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             Outcome::Ok => write!(f, "OK ✅"),
-           Outcome::Rejected(msg) => write!(f, "❌ unsatisfied\n\t{}", msg),
+           Outcome::Rejected(msg) => write!(f, "❌ unsatisfied\n{}", msg),
         }
     }
 }

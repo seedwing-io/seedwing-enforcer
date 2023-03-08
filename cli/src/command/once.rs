@@ -45,9 +45,10 @@ impl Once {
         match enforcer.eval(dependencies.unwrap()).await {
             Ok(scan) => {
                 let mut error = false;
-                println!("Scan results:");
+                println!("Scan result:");
                 for (dep, outcome) in scan {
                     println!("{} => {}", dep, outcome);
+
                     if !outcome.is_failed() {
                         error = true;
                     }
