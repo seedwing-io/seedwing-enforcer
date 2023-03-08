@@ -9,7 +9,7 @@ pub struct Config {
     #[serde(default)]
     pub dependencies: Option<Dependencies>,
     #[serde(default)]
-    pub enforcer: EnforcerConfig
+    pub enforcer: EnforcerConfig,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]

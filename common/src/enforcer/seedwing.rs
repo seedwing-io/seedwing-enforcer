@@ -118,7 +118,7 @@ impl Inner {
                 Error::BuildRuntime(errors) => {
                     if let Some(Ok(Config {
                         dependencies: Some(dependencies),
-                        enforcer: _
+                        enforcer: _,
                     })) = &self.config
                     {
                         let file = self.root.join(&dependencies.policy);
