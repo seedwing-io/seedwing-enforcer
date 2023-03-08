@@ -1,7 +1,7 @@
-use std::fmt::{Display, Formatter};
 use seedwing_policy_engine::value;
 use seedwing_policy_engine::value::serde::to_value;
 use seedwing_policy_engine::value::RuntimeValue;
+use std::fmt::{Display, Formatter};
 use url::Url;
 
 /// The internal representation of a dependency
@@ -23,7 +23,6 @@ impl TryFrom<Dependency> for RuntimeValue {
 
 impl Display for Dependency {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-
-           write!(f, "{}", self.purl)
-        }
+        write!(f, "{}", self.purl)
+    }
 }

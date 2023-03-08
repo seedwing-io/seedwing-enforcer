@@ -1,6 +1,6 @@
+use crate::config::RationaleVariant;
 use seedwing_policy_engine::runtime::rationale::Rationale;
 use seedwing_policy_engine::runtime::{EvaluationResult, Output, Response};
-use crate::config::RationaleVariant;
 
 pub struct Rationalizer<'r> {
     result: &'r EvaluationResult,
@@ -15,16 +15,16 @@ impl<'r> Rationalizer<'r> {
         match config {
             RationaleVariant::Html => {
                 let mut html = String::new();
-            html.push_str("<div>");
-            Self::rationale_inner(&mut html, self.result);
+                html.push_str("<div>");
+                Self::rationale_inner(&mut html, self.result);
 
-            html.push_str("<div>");
-            html
-            },
+                html.push_str("<div>");
+                html
+            }
             RationaleVariant::Yaml => {
                 let resp = Response::new(self.result);
                 serde_yaml::to_string(&resp).unwrap()
-            },
+            }
             RationaleVariant::Json => {
                 let resp = Response::new(self.result);
                 serde_json::to_string(&resp).unwrap()
