@@ -8,12 +8,29 @@ pub const FILE_NAME_YAML: &str = ".enforcer.yaml";
 pub struct Config {
     #[serde(default)]
     pub dependencies: Option<Dependencies>,
+    #[serde(default)]
+    pub enforcer: EnforcerConfig
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct Dependencies {
     pub policy: String,
     pub requires: String,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct EnforcerConfig {
+    #[serde(default)]
+    pub rationale: RationaleVariant,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum RationaleVariant {
+    #[default]
+    Html,
+    Yaml,
+    Json,
 }
 
 /// resolve the paths in the configuration

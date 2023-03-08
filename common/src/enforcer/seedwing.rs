@@ -118,6 +118,7 @@ impl Inner {
                 Error::BuildRuntime(errors) => {
                     if let Some(Ok(Config {
                         dependencies: Some(dependencies),
+                        enforcer: _
                     })) = &self.config
                     {
                         let file = self.root.join(&dependencies.policy);
@@ -199,7 +200,7 @@ impl Runner {
 
             let outcome = world.evaluate(&requires, input, Default::default()).await?;
 
-            let rationale = Rationalizer::new(&outcome).rationale();
+            let rationale = Rationalizer::new(&outcome).rationale(&self.config.enforcer.rationale);
 
             let outcome = match outcome.satisfied() {
                 true => Outcome::Ok,
