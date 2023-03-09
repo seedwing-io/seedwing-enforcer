@@ -17,6 +17,10 @@ tower-lsp = { version = "0.19.0" }
 seedwing-enforcer-common = { path = "../common" }
 seedwing-enforcer-lsp-common = { path = "../lsp-common" }
 
+serde = "1.0"
+serde_json = "1.0"
+serde_yaml = "0.9"
+
 openssl = { version = "*", optional = true }
 
 [features]
