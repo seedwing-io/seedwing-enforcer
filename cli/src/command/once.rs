@@ -1,11 +1,15 @@
-use anyhow::bail;
+use std::fmt::Debug;
+use clap::{Args, ValueEnum};
 use seedwing_enforcer_common::enforcer::seedwing::Enforcer;
 use seedwing_enforcer_common::enforcer::source::maven::MavenSource;
 use seedwing_enforcer_common::enforcer::source::Source;
 use seedwing_enforcer_common::utils::pool::Pool;
 use std::path::PathBuf;
+use seedwing_enforcer_common::enforcer::Dependency;
+use seedwing_enforcer_common::enforcer::Outcome;
+use serde::Serialize;
 
-#[derive(clap::Args, Debug)]
+#[derive(Args, Debug)]
 #[command(about = "Scan dependencies once", allow_external_subcommands = true)]
 pub struct Once {
     #[arg(short, long)]
@@ -14,19 +18,48 @@ pub struct Once {
     config: PathBuf,
     #[arg(short, long, default_value_t = false)]
     verbose: bool,
+    #[arg(short, long, value_enum)]
+    output: Output,
+}
+
+#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
+pub enum Output {
+    #[default]
+    Text,
+    Json,
+    Yaml,
 }
 
 impl Once {
     // todo change printlns to a logger ?
     // todo enforcer config option to not wrap rationale in HTML
     pub async fn run(self) -> anyhow::Result<()> {
-        // ../target/debug/senf once --source ../common/test-data/pom1.xml
+        let res = self.inner_run().await;
 
-        let pom = MavenSource::new(dir_path(self.source.clone()));
-        let dependencies = pom.scan().await;
-        if let Err(e) = dependencies {
-            bail!("Error: failed scanning dependencies: {:?}", e);
+        match self.output {
+            Output::Text => todo!(),
+            Output::Yaml => println!("{}", serde_yaml::to_string(&res).unwrap()),
+            Output::Json => println!("{}", serde_json::to_string(&res).unwrap()),
         }
+
+        match res.status {
+            AggregatedResult::Accepted => Ok(()),
+            AggregatedResult::ConfigError(msg) => anyhow::bail!(msg),
+            AggregatedResult::Rejected => anyhow::bail!("")
+        }
+    }
+
+     async fn inner_run(&self) -> NamesAreHard {
+         let pom = MavenSource::new(dir_path(self.source.clone()));
+         let dependencies = pom.scan().await;
+         if let Err(e) = dependencies {
+             let msg = format!("failed scanning dependencies: {:?}", e);
+             return NamesAreHard {
+                 status: AggregatedResult::ConfigError(msg),
+                 details: vec![]
+             };
+         }
+
 
         let mut enforcer = Enforcer::new(dir_path(Some(self.config.clone())), Pool::new()).await;
         enforcer.configure().await;
@@ -39,28 +72,44 @@ impl Once {
                     println!("\t - {}", i.message)
                 }
             }
-            bail!("Error: invalid enforcer configuration.");
+            let msg = format!("invalid enforcer configuration.");
+            return NamesAreHard {
+                 status: AggregatedResult::ConfigError(msg),
+                 details: vec![]
+             };
         }
 
-        match enforcer.eval(dependencies.unwrap()).await {
+
+        return match enforcer.eval(dependencies.unwrap()).await {
             Ok(scan) => {
                 let mut error = false;
-                println!("Scan result:");
+                let mut result = Vec::new();
                 for (dep, outcome) in scan {
-                    println!("{} => {}", dep, outcome);
-
-                    if !outcome.is_failed() {
+                    result.push(PolicyResult::new(dep, &outcome));
+                    if outcome.is_failed() {
                         error = true;
                     }
                 }
                 if error {
-                    bail!("At least one dependency does not satisfy policies");
+                    NamesAreHard {
+                        status: AggregatedResult:: Rejected,
+                        details: result,
+                    }
+                } else {
+                    NamesAreHard {
+                        status: AggregatedResult::Accepted,
+                        details: result,
+                    }
                 }
             }
-            Err(e) => bail!("Error while scanning dependencies : {:?}", e),
+            Err(e) => {
+                let msg = format!("Error while scanning dependencies : {:?}", e);
+                NamesAreHard {
+                 status: AggregatedResult::ConfigError(msg),
+                 details: vec![]
+             }
+            },
         }
-
-        Ok(())
     }
 }
 
@@ -73,4 +122,40 @@ fn dir_path(path: Option<PathBuf>) -> PathBuf {
     } else {
         path.to_path_buf()
     }
+}
+
+#[derive(Debug, Serialize)]
+pub struct NamesAreHard {
+    status: AggregatedResult,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    details: Vec<PolicyResult>
+}
+
+#[derive(Debug, Serialize)]
+pub struct PolicyResult {
+    dependency: Dependency,
+    outcome: Outcome,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    message: Option<String>
+}
+
+#[derive(Debug, Serialize)]
+pub enum AggregatedResult {
+    Accepted,
+    ConfigError(String),
+    Rejected,
+}
+
+impl PolicyResult {
+    pub fn new(dependency: Dependency, outcome: &Outcome) -> PolicyResult {
+        let message = match outcome {
+            Outcome::Ok => None,
+            Outcome::Rejected(msg) => Some(msg.clone()),
+        };
+        PolicyResult {
+        dependency,
+        outcome: outcome.clone(),
+        message,
+    }
+}
 }

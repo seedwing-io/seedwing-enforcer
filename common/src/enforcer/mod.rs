@@ -2,11 +2,12 @@ mod dependency;
 
 pub use dependency::*;
 use std::fmt::{Display, Formatter};
+use serde::Serialize;
 
 pub mod seedwing;
 pub mod source;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
 pub enum Outcome {
     Ok,
     Rejected(String),
