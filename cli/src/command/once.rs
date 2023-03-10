@@ -1,13 +1,13 @@
-use std::fmt::Debug;
 use clap::{Args, ValueEnum};
 use seedwing_enforcer_common::enforcer::seedwing::Enforcer;
 use seedwing_enforcer_common::enforcer::source::maven::MavenSource;
 use seedwing_enforcer_common::enforcer::source::Source;
-use seedwing_enforcer_common::utils::pool::Pool;
-use std::path::PathBuf;
 use seedwing_enforcer_common::enforcer::Dependency;
 use seedwing_enforcer_common::enforcer::Outcome;
+use seedwing_enforcer_common::utils::pool::Pool;
 use serde::Serialize;
+use std::fmt::Debug;
+use std::path::PathBuf;
 
 #[derive(Args, Debug)]
 #[command(about = "Scan dependencies once", allow_external_subcommands = true)]
@@ -31,8 +31,6 @@ pub enum Output {
 }
 
 impl Once {
-    // todo change printlns to a logger ?
-    // todo enforcer config option to not wrap rationale in HTML
     pub async fn run(self) -> anyhow::Result<()> {
         let res = self.inner_run().await;
 
@@ -45,21 +43,20 @@ impl Once {
         match res.status {
             AggregatedResult::Accepted => Ok(()),
             AggregatedResult::ConfigError(msg) => anyhow::bail!(msg),
-            AggregatedResult::Rejected => anyhow::bail!("")
+            AggregatedResult::Rejected => anyhow::bail!(""),
         }
     }
 
-     async fn inner_run(&self) -> NamesAreHard {
-         let pom = MavenSource::new(dir_path(self.source.clone()));
-         let dependencies = pom.scan().await;
-         if let Err(e) = dependencies {
-             let msg = format!("failed scanning dependencies: {:?}", e);
-             return NamesAreHard {
-                 status: AggregatedResult::ConfigError(msg),
-                 details: vec![]
-             };
-         }
-
+    async fn inner_run(&self) -> NamesAreHard {
+        let pom = MavenSource::new(dir_path(self.source.clone()));
+        let dependencies = pom.scan().await;
+        if let Err(e) = dependencies {
+            let msg = format!("failed scanning dependencies: {:?}", e);
+            return NamesAreHard {
+                status: AggregatedResult::ConfigError(msg),
+                details: vec![],
+            };
+        }
 
         let mut enforcer = Enforcer::new(dir_path(Some(self.config.clone())), Pool::new()).await;
         enforcer.configure().await;
@@ -72,13 +69,12 @@ impl Once {
                     println!("\t - {}", i.message)
                 }
             }
-            let msg = format!("invalid enforcer configuration.");
+            let msg = "invalid enforcer configuration.".to_string();
             return NamesAreHard {
-                 status: AggregatedResult::ConfigError(msg),
-                 details: vec![]
-             };
+                status: AggregatedResult::ConfigError(msg),
+                details: vec![],
+            };
         }
-
 
         return match enforcer.eval(dependencies.unwrap()).await {
             Ok(scan) => {
@@ -92,7 +88,7 @@ impl Once {
                 }
                 if error {
                     NamesAreHard {
-                        status: AggregatedResult:: Rejected,
+                        status: AggregatedResult::Rejected,
                         details: result,
                     }
                 } else {
@@ -105,11 +101,11 @@ impl Once {
             Err(e) => {
                 let msg = format!("Error while scanning dependencies : {:?}", e);
                 NamesAreHard {
-                 status: AggregatedResult::ConfigError(msg),
-                 details: vec![]
-             }
-            },
-        }
+                    status: AggregatedResult::ConfigError(msg),
+                    details: vec![],
+                }
+            }
+        };
     }
 }
 
@@ -120,7 +116,7 @@ fn dir_path(path: Option<PathBuf>) -> PathBuf {
     if path.is_file() {
         path.parent().unwrap().to_path_buf()
     } else {
-        path.to_path_buf()
+        path
     }
 }
 
@@ -128,7 +124,7 @@ fn dir_path(path: Option<PathBuf>) -> PathBuf {
 pub struct NamesAreHard {
     status: AggregatedResult,
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    details: Vec<PolicyResult>
+    details: Vec<PolicyResult>,
 }
 
 #[derive(Debug, Serialize)]
@@ -136,7 +132,7 @@ pub struct PolicyResult {
     dependency: Dependency,
     outcome: Outcome,
     #[serde(skip_serializing_if = "Option::is_none")]
-    message: Option<String>
+    message: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -153,9 +149,9 @@ impl PolicyResult {
             Outcome::Rejected(msg) => Some(msg.clone()),
         };
         PolicyResult {
-        dependency,
-        outcome: outcome.clone(),
-        message,
+            dependency,
+            outcome: outcome.clone(),
+            message,
+        }
     }
-}
 }

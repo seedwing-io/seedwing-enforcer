@@ -1,8 +1,8 @@
 mod dependency;
 
 pub use dependency::*;
-use std::fmt::{Display, Formatter};
 use serde::Serialize;
+use std::fmt::{Display, Formatter};
 
 pub mod seedwing;
 pub mod source;
