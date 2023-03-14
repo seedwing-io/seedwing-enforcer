@@ -9,6 +9,9 @@ mod command;
 async fn main() {
     match Cli::parse().run().await {
         Ok(_) => exit(0),
-        Err(_) => exit(1),
+        Err(err) => {
+            eprintln!("{err}");
+            exit(1)
+        }
     }
 }
