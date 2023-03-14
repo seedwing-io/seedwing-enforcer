@@ -3,6 +3,7 @@ use crate::highlight::Range;
 use async_trait::async_trait;
 use url::Url;
 
+pub mod cargo;
 pub mod maven;
 pub mod sbom;
 

@@ -2,7 +2,7 @@ use clap::{Args, ValueEnum};
 use seedwing_enforcer_common::{
     enforcer::{
         seedwing::Enforcer,
-        source::{maven::MavenSource, Source},
+        source::{maven::MavenSource, cargo::CargoSource, Source},
         Dependency, Outcome,
     },
     utils::{pool::Pool, progress::NoProgress},
@@ -21,6 +21,8 @@ pub struct Once {
     verbose: bool,
     #[arg(short, long, value_enum)]
     output: Output,
+    #[arg(short, long, value_enum)]
+    manifest: Manifest,
 }
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
@@ -31,9 +33,17 @@ pub enum Output {
     Yaml,
 }
 
+#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
+pub enum Manifest {
+    #[default]
+    Cargo,
+    Maven,
+}
+
 impl Once {
     pub async fn run(self) -> anyhow::Result<()> {
-        let res = self.inner_run().await;
+        let deps = self.get_deps().await;
+        let res = self.inner_run(deps).await;
 
         match self.output {
             Output::Text => todo!(),
@@ -48,9 +58,20 @@ impl Once {
         }
     }
 
-    async fn inner_run(&self) -> NamesAreHard {
-        let pom = MavenSource::new(dir_path(self.source.clone()));
-        let dependencies = pom.scan().await;
+    async fn get_deps(&self) -> anyhow::Result<Vec<Dependency>> {
+        match self.manifest {
+            Manifest::Maven => {
+                let pom = MavenSource::new(dir_path(self.source.clone()));
+                pom.scan().await
+            }
+            Manifest::Cargo => {
+                let cargo = CargoSource::new(dir_path(self.source.clone()));
+                cargo.scan().await
+            }
+        }
+    }
+
+    async fn inner_run(&self, dependencies: anyhow::Result<Vec<Dependency>>) -> NamesAreHard {
         if let Err(e) = dependencies {
             let msg = format!("failed scanning dependencies: {:?}", e);
             return NamesAreHard {
