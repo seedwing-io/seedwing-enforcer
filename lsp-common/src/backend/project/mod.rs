@@ -89,7 +89,7 @@ impl Project {
         self.publisher.publish_file(Category::Enforcer, diags).await;
 
         // now re-evaluate all
-        for (_, file) in &mut self.files {
+        for file in &mut self.files.values_mut() {
             file.build(&mut self.publisher).await;
         }
     }

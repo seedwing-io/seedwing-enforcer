@@ -24,3 +24,9 @@ impl Pool {
         self.pool.spawn_pinned(f).await.map_err(|_err| PoolError)
     }
 }
+
+impl Default for Pool {
+    fn default() -> Self {
+        Self::new()
+    }
+}
