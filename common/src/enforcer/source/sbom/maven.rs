@@ -1,11 +1,13 @@
-use crate::enforcer::source::sbom::{CycloneDXFormat, CycloneDXVersion, Generator, Output, Type};
-use crate::enforcer::Dependency;
-use crate::highlight::{Highlighter, Range};
+use crate::{
+    enforcer::{
+        source::sbom::{CycloneDXFormat, CycloneDXVersion, Generator, Output, Type},
+        Dependency,
+    },
+    highlight::{Highlighter, Range},
+};
 use anyhow::{anyhow, bail};
 use async_trait::async_trait;
-use std::fs;
-use std::path::PathBuf;
-use std::process::Command;
+use std::{fs, path::PathBuf, process::Command};
 use url::Url;
 
 pub struct MavenGenerator {
@@ -27,7 +29,7 @@ impl Generator for MavenGenerator {
     fn highlight(&self, _: &Dependency) -> anyhow::Result<(Url, Range)> {
         let content = fs::read_to_string(self.root.join("pom.xml"))?;
         let h = Highlighter::new(&content)?;
-        let url = Url::from_file_path(&self.root.join("pom.xml"))
+        let url = Url::from_file_path(self.root.join("pom.xml"))
             .map_err(|()| anyhow!("Failed to create file URL"))?;
 
         // TODO: find actual dependency
@@ -35,9 +37,23 @@ impl Generator for MavenGenerator {
         // then fall back to dependencies section
         // TODO: or full document
 
-        let position = h.find(|p| p.tag_name().name() == "dependencies")?;
+        let position = h
+            .find_with(|doc| {
+                doc.root_element()
+                    .children()
+                    .find(|p| p.tag_name().name() == "dependencies")
+            })
+            .or_else(|_| {
+                h.find_with(|doc| {
+                    doc.root_element()
+                        .children()
+                        .find(|p| p.tag_name().name() == "dependencyManagement")
+                        .and_then(|d| d.children().find(|p| p.tag_name().name() == "dependencies"))
+                })
+            })?
+            .unwrap_or_else(|| h.full_range());
 
-        Ok((url, position.unwrap_or_default()))
+        Ok((url, position))
     }
 }
 

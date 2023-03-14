@@ -1,6 +1,7 @@
 use crate::{
     backend::{
         notification::{UpdatedDependencies, UpdatedDependenciesParameters},
+        progress::{run_operation, ClientProgress},
         project::publisher::{Category, DiagnosticPublisher},
     },
     protocol::{commands::SHOW_REPORT, types::Report},
@@ -59,6 +60,7 @@ impl File {
         }
     }
 
+    /// build the project, which in this case means to gather and validate dependencies
     pub async fn build(&mut self, publisher: &mut DiagnosticPublisher) {
         let root = match Url::from_file_path(&self.path) {
             Ok(url) => url,
@@ -81,10 +83,14 @@ impl File {
             }
         }
 
+        log::info!("Returned from operation");
+
         // publish outcome
         publisher
             .publish(Category::Source, self.diagnostics.clone())
             .await;
+
+        log::info!("Send dependency update");
 
         self.client
             .send_notification::<UpdatedDependencies>(UpdatedDependenciesParameters {
@@ -101,11 +107,23 @@ impl File {
         };
 
         let source = SBOM::new(MavenGenerator::new(root));
-
         // refresh dependencies
-        self.dependencies = source.scan().await.map_err(Error::Source)?;
 
-        let outcome = self.enforcer.eval(self.dependencies.clone()).await?;
+        self.dependencies = run_operation(
+            self.client.clone(),
+            "Gathering dependencies",
+            1,
+            |_progress| async { source.scan().await.map_err(Error::Source) },
+        )
+        .await?;
+
+        let outcome = self
+            .enforcer
+            .eval(
+                self.dependencies.clone(),
+                ClientProgress(self.client.clone()),
+            )
+            .await?;
 
         let mut diags = HashMap::<Url, Vec<Diagnostic>>::new();
 
@@ -145,7 +163,7 @@ impl File {
         };
 
         if let Some(diags) = self.diagnostics.get(&root) {
-            self.collect_code_lens(&diags)
+            self.collect_code_lens(diags)
         } else {
             Ok(vec![])
         }

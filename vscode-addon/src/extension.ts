@@ -8,9 +8,10 @@ import {
     TransportKind,
 } from "vscode-languageclient/node";
 import {EnforcerDependenciesProvider} from "./deps";
-import {SeedwingReport, UpdatedDependencies} from "./data";
+import {FinishOperation, SeedwingReport, StartOperation, UpdatedDependencies, UpdateOperation} from "./data";
 import {Report} from "./report";
 import {acquire} from "./cli";
+import {startOperation, updateOperation, finishOperation} from "./progress";
 
 /*
 import { ServiceConnection } from '@vscode/sync-api-common/node';
@@ -33,6 +34,7 @@ async function serverOptionsNative(context: ExtensionContext): Promise<ServerOpt
         options: {
             env: {
                 ...process.env,
+                "RUST_BACKTRACE": "1",
             },
         },
     };
@@ -42,8 +44,8 @@ async function serverOptionsNative(context: ExtensionContext): Promise<ServerOpt
     };
     debug.options.env["RUST_LOG"] = "debug";
 
-    console.log("Run:", run);
-    console.log("Debug:", debug);
+    console.debug("Run:", run);
+    console.debug("Debug:", debug);
 
     return {
         run,
@@ -52,7 +54,8 @@ async function serverOptionsNative(context: ExtensionContext): Promise<ServerOpt
 }
 
 async function startLsp(context: ExtensionContext): Promise<LanguageClient> {
-    const traceOutputChannel = window.createOutputChannel("Seedwing Enforcer Language Server trace");
+    const outputChannel = window.createOutputChannel("Seedwing Enforcer Language Server");
+    const traceOutputChannel = window.createOutputChannel("Seedwing Enforcer Language Server Trace");
 
     const clientOptions: LanguageClientOptions = {
         documentSelector: [
@@ -70,6 +73,8 @@ async function startLsp(context: ExtensionContext): Promise<LanguageClient> {
             isTrusted: true,
             supportHtml: true
         },
+        outputChannel,
+        outputChannelName: "Seedwing Enforcer",
         traceOutputChannel,
     };
 
@@ -110,6 +115,16 @@ export async function activate(context: ExtensionContext): Promise<void> {
     client.onNotification(UpdatedDependencies.NAME, (params: UpdatedDependencies) => {
         console.debug("Params:", params);
         dependencies.update(params);
+    });
+
+    client.onNotification(StartOperation.NAME, (params: StartOperation) => {
+        startOperation(params.token, params.title, params.total);
+    });
+    client.onNotification(UpdateOperation.NAME, (params: UpdateOperation) => {
+        updateOperation(params.token, params.message, params.increment);
+    });
+    client.onNotification(FinishOperation.NAME, (params: FinishOperation) => {
+        finishOperation(params.token);
     });
 
     client.registerProposedFeatures();

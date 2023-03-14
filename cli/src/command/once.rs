@@ -1,13 +1,14 @@
 use clap::{Args, ValueEnum};
-use seedwing_enforcer_common::enforcer::seedwing::Enforcer;
-use seedwing_enforcer_common::enforcer::source::maven::MavenSource;
-use seedwing_enforcer_common::enforcer::source::Source;
-use seedwing_enforcer_common::enforcer::Dependency;
-use seedwing_enforcer_common::enforcer::Outcome;
-use seedwing_enforcer_common::utils::pool::Pool;
+use seedwing_enforcer_common::{
+    enforcer::{
+        seedwing::Enforcer,
+        source::{maven::MavenSource, Source},
+        Dependency, Outcome,
+    },
+    utils::{pool::Pool, progress::NoProgress},
+};
 use serde::Serialize;
-use std::fmt::Debug;
-use std::path::PathBuf;
+use std::{fmt::Debug, path::PathBuf};
 
 #[derive(Args, Debug)]
 #[command(about = "Scan dependencies once", allow_external_subcommands = true)]
@@ -76,7 +77,7 @@ impl Once {
             };
         }
 
-        return match enforcer.eval(dependencies.unwrap()).await {
+        return match enforcer.eval(dependencies.unwrap(), NoProgress).await {
             Ok(scan) => {
                 let mut error = false;
                 let mut result = Vec::new();
@@ -111,7 +112,7 @@ impl Once {
 
 // todo allow providing full path to files and not assume file names
 fn dir_path(path: Option<PathBuf>) -> PathBuf {
-    let path = path.unwrap_or(PathBuf::from("./"));
+    let path = path.unwrap_or_else(|| PathBuf::from("./"));
 
     if path.is_file() {
         path.parent().unwrap().to_path_buf()

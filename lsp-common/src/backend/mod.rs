@@ -14,6 +14,8 @@ mod notification;
 mod project;
 mod workspace;
 
+pub mod progress;
+
 pub struct Backend {
     pub client: Client,
     workspace: Workspace,
@@ -76,6 +78,10 @@ impl LanguageServer for Backend {
     }
 
     async fn initialized(&self, _params: InitializedParams) {
+        self.client
+            .log_message(MessageType::LOG, format!("Getting started"))
+            .await;
+
         let folders = self.initial_folders.lock().unwrap().replace(None);
         if let Some(folders) = folders {
             self.workspace.folders_changed(folders, vec![]).await;

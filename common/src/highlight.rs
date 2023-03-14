@@ -1,7 +1,9 @@
 use ropey::Rope;
 use roxmltree::{Document, Node};
-use std::fmt::{Display, Formatter};
-use std::ops::{Deref, DerefMut};
+use std::{
+    fmt::{Display, Formatter},
+    ops::{Deref, DerefMut},
+};
 
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Position {
@@ -75,20 +77,45 @@ pub struct Highlighter<'a> {
 
 impl<'a> Highlighter<'a> {
     pub fn new(content: &'a str) -> anyhow::Result<Self> {
-        let rope = Rope::from_str(&content);
+        let rope = Rope::from_str(content);
         let doc = Document::parse(content)?;
 
         Ok(Self { rope, doc })
+    }
+
+    pub fn full_range(&self) -> Range {
+        let lines = self.rope.len_lines();
+
+        let lines = if lines == 0 {
+            return Default::default();
+        } else {
+            lines - 1
+        };
+
+        let end = Position {
+            line: lines,
+            position: self.rope.line(lines).len_bytes(),
+        };
+
+        Range(Position::default()..end)
+    }
+
+    pub fn find_with<'r, F>(&'a self, f: F) -> anyhow::Result<Option<Range>>
+    where
+        F: FnOnce(&'a Document<'a>) -> Option<Node<'r, 'a>> + 'r,
+        'a: 'r,
+    {
+        Ok(match f(&self.doc) {
+            Some(node) => Some(Range(self.make_range(node.range())?)),
+            None => None,
+        })
     }
 
     pub fn find<P>(&self, predicate: P) -> anyhow::Result<Option<Range>>
     where
         P: Fn(&Node) -> bool,
     {
-        Ok(match self.doc.descendants().find(predicate) {
-            Some(node) => Some(Range(self.make_range(node.range())?)),
-            None => None,
-        })
+        self.find_with(|doc| doc.descendants().find(predicate))
     }
 
     fn make_range(

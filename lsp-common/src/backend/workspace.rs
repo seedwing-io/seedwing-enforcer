@@ -7,7 +7,9 @@ use std::{
 };
 use tokio::sync::RwLock;
 use tower_lsp::{
-    lsp_types::{CodeActionContext, CodeActionOrCommand, CodeLens, Range, WorkspaceFolder},
+    lsp_types::{
+        CodeActionContext, CodeActionOrCommand, CodeLens, MessageType, Range, WorkspaceFolder,
+    },
     Client,
 };
 use url::Url;
@@ -82,6 +84,10 @@ impl Inner {
         added: Vec<WorkspaceFolder>,
         removed: Vec<WorkspaceFolder>,
     ) {
+        self.client
+            .log_message(MessageType::INFO, format!("Updating workspace folders"))
+            .await;
+
         for path in removed {
             if let Some(path) = as_path(&path.uri) {
                 log::info!("Remove folder: {}", path.display());
@@ -94,10 +100,17 @@ impl Inner {
                 log::info!("Add folder: {}", path.display());
                 self.folders.insert(
                     path.to_path_buf(),
-                    Folder::new(self.client.clone(), path.into(), self.pool.clone()).await,
+                    Folder::new(self.client.clone(), path, self.pool.clone()).await,
                 );
             }
         }
+
+        self.client
+            .log_message(
+                MessageType::INFO,
+                format!("New workspace set: {:?}", self.folders.keys()),
+            )
+            .await;
 
         if log::log_enabled!(log::Level::Info) {
             log::info!("New workspace set: {:?}", self.folders.keys());

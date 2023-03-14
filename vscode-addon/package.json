@@ -102,6 +102,7 @@
     "@types/semver": "^7.3.13"
   },
   "dependencies": {
+    "async-channel": "^0.2.0",
     "vscode-languageclient": "^8.1.0",
     "packageurl-js": "^1.0.0",
     "@vscode/wasm-wasi": "^0.8.2",

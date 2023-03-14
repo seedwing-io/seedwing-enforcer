@@ -2,6 +2,7 @@ use lsp_types::{Position, Range};
 use ropey::Rope;
 
 pub mod pool;
+pub mod progress;
 pub mod rationale;
 
 pub fn span_to_range(content: &Rope, span: std::ops::Range<usize>) -> Option<Range> {

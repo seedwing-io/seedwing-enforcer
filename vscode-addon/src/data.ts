@@ -22,3 +22,31 @@ export class SeedwingReport {
     ) {
     }
 }
+
+export class StartOperation {
+    public static readonly NAME = "enforcer/startOperation";
+    constructor(
+        public readonly token: string,
+        public readonly title: string,
+        public readonly total: number,
+    ) {
+    }
+}
+
+export class UpdateOperation {
+    public static readonly NAME = "enforcer/updateOperation";
+    constructor(
+        public readonly token: string,
+        public readonly message: string,
+        public readonly increment: number,
+    ) {
+    }
+}
+
+export class FinishOperation {
+    public static readonly NAME = "enforcer/finishOperation";
+    constructor(
+        public readonly token: string,
+    ) {
+    }
+}

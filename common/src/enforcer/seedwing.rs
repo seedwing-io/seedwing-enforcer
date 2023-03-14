@@ -1,9 +1,15 @@
 //! Seedwing enforcer implementation
 
-use crate::config::{self, Config, Dependencies, FILE_NAME_YAML};
-use crate::enforcer::{Dependency, Outcome};
-use crate::utils::pool::{Pool, PoolError};
-use crate::utils::{rationale::Rationalizer, span_to_range};
+use crate::{
+    config::{self, Config, Dependencies, FILE_NAME_YAML},
+    enforcer::{Dependency, Outcome},
+    utils::{
+        pool::{Pool, PoolError},
+        progress::{NoProgress, Progress, ProgressRunner},
+        rationale::Rationalizer,
+        span_to_range,
+    },
+};
 use lsp_types::{Diagnostic, DiagnosticSeverity};
 use ropey::Rope;
 use seedwing_policy_engine::{
@@ -67,11 +73,15 @@ impl Enforcer {
     }
 
     /// Evaluate dependencies against the configured enforcer
-    pub async fn eval(
+    pub async fn eval<P>(
         &self,
         dependencies: Vec<Dependency>,
-    ) -> Result<Vec<(Dependency, Outcome)>, Error> {
-        self.inner.read().await.eval(dependencies).await
+        progress: P,
+    ) -> Result<Vec<(Dependency, Outcome)>, Error>
+    where
+        P: Progress + 'static,
+    {
+        self.inner.read().await.eval(dependencies, progress).await
     }
 }
 
@@ -109,7 +119,7 @@ impl Inner {
         }
 
         // eval engine results
-        if let Err(err) = self.eval(vec![]).await {
+        if let Err(err) = self.eval(vec![], NoProgress).await {
             // as we can't keep the World instance, we also can't prepare and reconfigure it. So
             // we only know that something is wrong when we run the evaluation. However, we need
             // to know as soon as the project is loaded.
@@ -127,7 +137,7 @@ impl Inner {
                     }
                 }
                 Error::ParsePolicy(source, errors) => {
-                    let file = self.root.join(&source);
+                    let file = self.root.join(source);
                     let diags = diag_from_build_errors(&file, errors);
                     result.insert(self.root.join(file), diags);
                 }
@@ -147,10 +157,14 @@ impl Inner {
         result
     }
 
-    pub async fn eval(
+    pub async fn eval<P>(
         &self,
         dependencies: Vec<Dependency>,
-    ) -> Result<Vec<(Dependency, Outcome)>, Error> {
+        progress: P,
+    ) -> Result<Vec<(Dependency, Outcome)>, Error>
+    where
+        P: Progress + 'static,
+    {
         // the implementation of this function must keep everything local, as we must provide a
         // function which is `Send`, and seedwing itself is not.
 
@@ -162,6 +176,7 @@ impl Inner {
         let runner = Runner {
             root: self.root.clone(),
             config: config.clone(),
+            progress,
         };
 
         self.pool
@@ -174,20 +189,28 @@ fn all_ok(dependencies: Vec<Dependency>) -> Vec<(Dependency, Outcome)> {
     dependencies.into_iter().map(|d| (d, Outcome::Ok)).collect()
 }
 
-struct Runner {
+struct Runner<P: Progress> {
     root: PathBuf,
     config: Config,
+    progress: P,
 }
 
-impl Runner {
+impl<P: Progress> Runner<P> {
     async fn eval(
         &self,
         dependencies: Vec<Dependency>,
     ) -> Result<Vec<(Dependency, Outcome)>, Error> {
+        let progress = self
+            .progress
+            .start("Scanning dependencies", dependencies.len() + 1)
+            .await;
+
         let dep_config = match &self.config.dependencies {
             Some(dep_config) => dep_config,
             None => return Ok(all_ok(dependencies)),
         };
+
+        progress.update(Some("Building world"), None).await;
 
         let world = self.build_world(dep_config).await?;
 
@@ -196,6 +219,10 @@ impl Runner {
         let requires = format!("{}::{}", DEFAULT_PACKAGE, dep_config.requires);
 
         for d in dependencies {
+            progress
+                .update(Some(format!("Scanning: {}", d.purl)), 1)
+                .await;
+
             let input: RuntimeValue = d.clone().try_into()?;
 
             let outcome = world.evaluate(&requires, input, Default::default()).await?;
