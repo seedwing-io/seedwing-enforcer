@@ -2,25 +2,19 @@ use crate::enforcer::{source::Source, Dependency};
 use crate::highlight::Range;
 use anyhow::anyhow;
 use async_trait::async_trait;
-use std::fs;
 use std::path::PathBuf;
 use url::Url;
 
 fn cargo_to_purl(name: String, dep: cargo_toml::Dependency) -> Option<Dependency> {
-
     match dep {
         cargo_toml::Dependency::Simple(version) => Some(Dependency {
             purl: Url::parse(format!("pkg:cargo/{name}@{version}").as_str()).unwrap(),
         }),
         cargo_toml::Dependency::Detailed(detail) => {
             // if there is no version provided we can't build a compliant package url
-            if let Some(version) = detail.version {
-                Some(Dependency {
-                    purl: Url::parse(format!("pkg:cargo/{}@{}", name, version).as_str()).unwrap(),
-                })
-            } else {
-                None
-            }
+            detail.version.map(|version| Dependency {
+                purl: Url::parse(format!("pkg:cargo/{}@{}", name, version).as_str()).unwrap(),
+            })
         }
         cargo_toml::Dependency::Inherited(_) => unimplemented!(),
     }

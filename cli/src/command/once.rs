@@ -2,7 +2,7 @@ use clap::{Args, ValueEnum};
 use seedwing_enforcer_common::{
     enforcer::{
         seedwing::Enforcer,
-        source::{maven::MavenSource, cargo::CargoSource, Source},
+        source::{cargo::CargoSource, maven::MavenSource, Source},
         Dependency, Outcome,
     },
     utils::{pool::Pool, progress::NoProgress},
@@ -98,7 +98,7 @@ impl Once {
             };
         }
 
-        return match enforcer.eval(dependencies.unwrap(), NoProgress).await {
+        match enforcer.eval(dependencies.unwrap(), NoProgress).await {
             Ok(scan) => {
                 let mut error = false;
                 let mut result = Vec::new();
@@ -127,7 +127,7 @@ impl Once {
                     details: vec![],
                 }
             }
-        };
+        }
     }
 }
 
