@@ -4,6 +4,7 @@ use seedwing_enforcer_common::{
 };
 use std::{
     collections::HashMap,
+    ffi::OsStr,
     path::{Path, PathBuf},
 };
 use tower_lsp::{
@@ -76,8 +77,9 @@ impl Project {
         } else if path.ends_with(FILE_NAME_YAML) {
             // configuration changed
             self.reconfigure().await;
-        } else if matches!(path.extension().and_then(|s| s.to_str()), Some("dog")) {
+        } else if matches!(path.extension().and_then(OsStr::to_str), Some("dog")) {
             // policy changed
+            // TODO: we reconfigure on any .dog change, we could limit this to the ones used
             self.reconfigure().await;
         }
     }

@@ -106,9 +106,8 @@ impl File {
             None => return Ok(()),
         };
 
-        let source = SBOM::new(MavenGenerator::new(root));
         // refresh dependencies
-
+        let source = SBOM::new(MavenGenerator::new(root));
         self.dependencies = run_operation(
             self.client.clone(),
             "Gathering dependencies",
@@ -117,6 +116,8 @@ impl File {
         )
         .await?;
 
+        // evaluate policies
+
         let outcome = self
             .enforcer
             .eval(
@@ -124,6 +125,8 @@ impl File {
                 ClientProgress(self.client.clone()),
             )
             .await?;
+
+        // render diagnostics
 
         let mut diags = HashMap::<Url, Vec<Diagnostic>>::new();
 

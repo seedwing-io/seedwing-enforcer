@@ -13,6 +13,12 @@ pub struct Dependency {
     pub purl: Url,
 }
 
+impl Dependency {
+    pub fn cache_key(&self) -> &str {
+        self.purl.as_str()
+    }
+}
+
 impl TryFrom<Dependency> for RuntimeValue {
     type Error = value::serde::Error;
 

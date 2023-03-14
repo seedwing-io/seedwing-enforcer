@@ -1,8 +1,9 @@
 //! Seedwing enforcer implementation
 
+use crate::enforcer::cache::DefaultCache;
 use crate::{
     config::{self, Config, Dependencies, FILE_NAME_YAML},
-    enforcer::{Dependency, Outcome},
+    enforcer::{cache::Cache, Dependency, Outcome},
     utils::{
         pool::{Pool, PoolError},
         progress::{NoProgress, Progress, ProgressRunner},
@@ -56,6 +57,7 @@ impl Enforcer {
             root: root.into(),
             pool,
             config: None,
+            cache: Default::default(),
         };
         inner.configure().await;
         Self {
@@ -92,12 +94,15 @@ struct Inner {
     pool: Pool,
 
     config: Option<anyhow::Result<Config>>,
+
+    cache: DefaultCache,
 }
 
 impl Inner {
     /// Reconfigure the enforcer
     async fn configure(&mut self) {
         self.config = config::try_load(&self.root).await;
+        self.cache.invalidate();
     }
 
     /// get current diagnostics for enforcer config itself
@@ -177,6 +182,7 @@ impl Inner {
             root: self.root.clone(),
             config: config.clone(),
             progress,
+            cache: self.cache.clone(),
         };
 
         self.pool
@@ -189,13 +195,14 @@ fn all_ok(dependencies: Vec<Dependency>) -> Vec<(Dependency, Outcome)> {
     dependencies.into_iter().map(|d| (d, Outcome::Ok)).collect()
 }
 
-struct Runner<P: Progress> {
+struct Runner<P: Progress, C: Cache> {
     root: PathBuf,
     config: Config,
     progress: P,
+    cache: C,
 }
 
-impl<P: Progress> Runner<P> {
+impl<P: Progress, C: Cache> Runner<P, C> {
     async fn eval(
         &self,
         dependencies: Vec<Dependency>,
@@ -219,22 +226,25 @@ impl<P: Progress> Runner<P> {
         let requires = format!("{}::{}", DEFAULT_PACKAGE, dep_config.requires);
 
         for d in dependencies {
-            progress
-                .update(Some(format!("Scanning: {}", d.purl)), 1)
-                .await;
+            progress.update(Some(d.purl.clone()), 1).await;
 
-            let input: RuntimeValue = d.clone().try_into()?;
+            match self.cache.get(&d) {
+                Some(outcome) => outcomes.push((d, outcome.clone())),
+                None => {
+                    let input: RuntimeValue = d.clone().try_into()?;
+                    let outcome = world.evaluate(&requires, input, Default::default()).await?;
+                    let rationale =
+                        Rationalizer::new(&outcome).rationale(&self.config.enforcer.rationale);
+                    let outcome = match outcome.satisfied() {
+                        true => Outcome::Ok,
+                        false => Outcome::Rejected(rationale),
+                    };
 
-            let outcome = world.evaluate(&requires, input, Default::default()).await?;
+                    self.cache.store(&d, outcome.clone());
 
-            let rationale = Rationalizer::new(&outcome).rationale(&self.config.enforcer.rationale);
-
-            let outcome = match outcome.satisfied() {
-                true => Outcome::Ok,
-                false => Outcome::Rejected(rationale),
-            };
-
-            outcomes.push((d, outcome));
+                    outcomes.push((d, outcome));
+                }
+            }
         }
 
         Ok(outcomes)

@@ -4,6 +4,7 @@ pub use dependency::*;
 use serde::Serialize;
 use std::fmt::{Display, Formatter};
 
+pub mod cache;
 pub mod seedwing;
 pub mod source;
 
