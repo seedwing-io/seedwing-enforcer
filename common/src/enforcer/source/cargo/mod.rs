@@ -2,22 +2,30 @@ use crate::enforcer::{source::Source, Dependency};
 use crate::highlight::Range;
 use anyhow::anyhow;
 use async_trait::async_trait;
+use cargo_lock::package::Package;
+use cargo_lock::Lockfile;
 use std::path::PathBuf;
 use url::Url;
 
-fn cargo_to_purl(name: String, dep: cargo_toml::Dependency) -> Option<Dependency> {
-    match dep {
-        cargo_toml::Dependency::Simple(version) => Some(Dependency {
-            purl: Url::parse(format!("pkg:cargo/{name}@{version}").as_str()).unwrap(),
-        }),
-        cargo_toml::Dependency::Detailed(detail) => {
-            // if there is no version provided we can't build a compliant package url
-            detail.version.map(|version| Dependency {
-                purl: Url::parse(format!("pkg:cargo/{}@{}", name, version).as_str()).unwrap(),
-            })
-        }
-        cargo_toml::Dependency::Inherited(_) => unimplemented!(),
-    }
+fn package_to_purl(package: Package) -> Option<Dependency> {
+    let name = package.name;
+    let version = package.version;
+
+    // the package may have some dependencies, but all the transiant dependencies are flattened
+    // in the cargo lockfile so we skip them.
+    // However it may be useful later to highlight the source dependency when finding an issue.
+    // package.dependencies -> Vec<Dependency>
+    let purl = Url::parse(format!("pkg:cargo/{name}@{version}").as_str()).unwrap();
+
+    // todo : add some more information such as git dependencies, patches, custom registry
+    // let source = package.source;
+    // if let Some(source) = source &&
+    //     let SourceKind::Git(git_ref) = source.kind()
+    //     {
+    //        purl.query_pairs_mut().append_pair("source", format!("{:?}",git_ref).as_str());
+    // }
+
+    Some(Dependency { purl })
 }
 
 pub struct CargoSource {
@@ -33,15 +41,18 @@ impl CargoSource {
 #[async_trait]
 impl Source for CargoSource {
     async fn scan(&self) -> anyhow::Result<Vec<Dependency>> {
-        let manifest = cargo_toml::Manifest::from_path(self.root.join("Cargo.toml"))?;
+        // find the project root, as the lockfile is not always along the `Cargo.toml` file.
+        let metadata = cargo_metadata::MetadataCommand::new()
+            .manifest_path(&self.root.join("Cargo.toml"))
+            .exec()?;
 
-        // let content = fs::read_to_string(self.root.join("Cargo.toml"))?;
-        // let manifest = cargo_toml::Manifest::from_str(&content)?;
+        let lockfile_path = metadata.workspace_root.join("Cargo.lock");
+        let lockfile = Lockfile::load(lockfile_path)?;
 
-        Ok(manifest
-            .dependencies
+        Ok(lockfile
+            .packages
             .into_iter()
-            .filter_map(|(n, d)| cargo_to_purl(n, d))
+            .filter_map(package_to_purl)
             .collect::<Vec<Dependency>>())
     }
 

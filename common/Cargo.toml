@@ -7,7 +7,8 @@ rust-version = "1.66"
 [dependencies]
 anyhow = "1"
 async-trait = "0.1.64"
-cargo_toml = "0.15.2"
+cargo-lock = "8.0.3"
+cargo_metadata = "0.15.3"
 cyclonedx-bom = "0.4.0"
 log = "0.4.14"
 lsp-types = { version = "0.94.0" }

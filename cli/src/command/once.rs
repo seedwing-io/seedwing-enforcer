@@ -1,10 +1,6 @@
 use clap::{Args, ValueEnum};
 use seedwing_enforcer_common::{
-    enforcer::{
-        seedwing::Enforcer,
-        source::{cargo::CargoSource, maven::MavenSource, Source},
-        Dependency, Outcome,
-    },
+    enforcer::{seedwing::Enforcer, source::AutoSource, Dependency, Outcome},
     utils::{pool::Pool, progress::NoProgress},
 };
 use serde::Serialize;
@@ -21,8 +17,6 @@ pub struct Once {
     verbose: bool,
     #[arg(short, long, value_enum)]
     output: Output,
-    #[arg(short, long, value_enum)]
-    manifest: Manifest,
 }
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
@@ -33,42 +27,28 @@ pub enum Output {
     Yaml,
 }
 
-#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
-pub enum Manifest {
-    #[default]
-    Cargo,
-    Maven,
-}
-
 impl Once {
     pub async fn run(self) -> anyhow::Result<()> {
         let deps = self.get_deps().await;
         let res = self.inner_run(deps).await;
 
-        match self.output {
-            Output::Text => todo!(),
-            Output::Yaml => println!("{}", serde_yaml::to_string(&res).unwrap()),
-            Output::Json => println!("{}", serde_json::to_string(&res).unwrap()),
-        }
-
         match res.status {
-            AggregatedResult::Accepted => Ok(()),
+            AggregatedResult::Accepted => {
+                match self.output {
+                    Output::Text => todo!(),
+                    Output::Yaml => println!("{}", serde_yaml::to_string(&res).unwrap()),
+                    Output::Json => println!("{}", serde_json::to_string(&res).unwrap()),
+                }
+                Ok(())
+            }
             AggregatedResult::ConfigError(msg) => anyhow::bail!(msg),
             AggregatedResult::Rejected => anyhow::bail!(""),
         }
     }
 
     async fn get_deps(&self) -> anyhow::Result<Vec<Dependency>> {
-        match self.manifest {
-            Manifest::Maven => {
-                let pom = MavenSource::new(dir_path(self.source.clone()));
-                pom.scan().await
-            }
-            Manifest::Cargo => {
-                let cargo = CargoSource::new(dir_path(self.source.clone()));
-                cargo.scan().await
-            }
-        }
+        let source = AutoSource::find_source(self.config.clone()).await?;
+        source.scan().await
     }
 
     async fn inner_run(&self, dependencies: anyhow::Result<Vec<Dependency>>) -> NamesAreHard {
