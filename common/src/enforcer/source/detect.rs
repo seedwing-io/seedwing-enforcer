@@ -1,4 +1,4 @@
-use crate::config::{try_load, ManifestType};
+use crate::config::{Config, ManifestType};
 use crate::enforcer::source::cargo::CargoSource;
 use crate::enforcer::source::maven::MavenSource;
 use crate::enforcer::source::Source;
@@ -9,11 +9,11 @@ use std::path::PathBuf;
 pub struct AutoSource {}
 
 impl AutoSource {
-    pub async fn find_source(path: impl Into<PathBuf>) -> Result<Box<dyn Source>> {
+    pub async fn find_source(
+        path: impl Into<PathBuf>,
+        config: Option<Config>,
+    ) -> Result<Box<dyn Source>> {
         let root: PathBuf = path.into();
-        let config = try_load(root.clone().as_path())
-            .await
-            .map(|r| r.expect("Error loading config !"));
 
         if let Some(config) = config {
             if let Some(source_type) = config.enforcer.source {

@@ -64,6 +64,11 @@ impl Enforcer {
             inner: Arc::new(RwLock::new(inner)),
         }
     }
+    /// Read the enforcer configuration
+    pub async fn get_config(&self) -> Option<Config> {
+        self.inner.read().await.get_config()
+    }
+
     /// Reconfigure the enforcer
     pub async fn configure(&mut self) {
         self.inner.write().await.configure().await;
@@ -103,6 +108,15 @@ impl Inner {
     async fn configure(&mut self) {
         self.config = config::try_load(&self.root).await;
         self.cache.invalidate();
+    }
+
+    /// Get the configuration
+    fn get_config(&self) -> Option<Config> {
+        // self.config.map(|c| c.ok()).flatten().clone()
+        match &self.config {
+            Some(Ok(config)) => Some(config.clone()),
+            _ => None,
+        }
     }
 
     /// get current diagnostics for enforcer config itself
