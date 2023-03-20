@@ -22,6 +22,7 @@ pub struct Dependencies {
 pub struct EnforcerConfig {
     #[serde(default)]
     pub rationale: RationaleVariant,
+    pub source: Option<ManifestType>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -31,6 +32,12 @@ pub enum RationaleVariant {
     Html,
     Yaml,
     Json,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub enum ManifestType {
+    Cargo,
+    Maven,
 }
 
 /// resolve the paths in the configuration

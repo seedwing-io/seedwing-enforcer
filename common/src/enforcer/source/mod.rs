@@ -3,8 +3,12 @@ use crate::highlight::Range;
 use async_trait::async_trait;
 use url::Url;
 
+pub mod cargo;
+mod detect;
 pub mod maven;
 pub mod sbom;
+
+pub use detect::AutoSource;
 
 /// A source of dependencies
 #[async_trait]

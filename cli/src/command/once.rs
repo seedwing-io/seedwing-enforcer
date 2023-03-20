@@ -1,10 +1,8 @@
+use anyhow::{bail, Result};
 use clap::{Args, ValueEnum};
+use seedwing_enforcer_common::config::Config;
 use seedwing_enforcer_common::{
-    enforcer::{
-        seedwing::Enforcer,
-        source::{maven::MavenSource, Source},
-        Dependency, Outcome,
-    },
+    enforcer::{seedwing::Enforcer, source::AutoSource, Dependency, Outcome},
     utils::{pool::Pool, progress::NoProgress},
 };
 use serde::Serialize;
@@ -33,32 +31,82 @@ pub enum Output {
 
 impl Once {
     pub async fn run(self) -> anyhow::Result<()> {
-        let res = self.inner_run().await;
+        let enforcer = self
+            .enforcer_setup()
+            .await
+            .expect("invalid enforcer configuration");
 
-        match self.output {
-            Output::Text => todo!(),
-            Output::Yaml => println!("{}", serde_yaml::to_string(&res).unwrap()),
-            Output::Json => println!("{}", serde_json::to_string(&res).unwrap()),
-        }
+        let config = enforcer.get_config().await;
 
-        match res.status {
-            AggregatedResult::Accepted => Ok(()),
-            AggregatedResult::ConfigError(msg) => anyhow::bail!(msg),
-            AggregatedResult::Rejected => anyhow::bail!(""),
+        let dependencies = self.get_deps(config).await;
+
+        let result = if let Err(e) = dependencies {
+            let msg = format!("failed scanning dependencies: {:?}", e);
+            NamesAreHard {
+                status: AggregatedResult::ConfigError(msg),
+                details: vec![],
+            }
+        } else {
+            match enforcer.eval(dependencies.unwrap(), NoProgress).await {
+                Ok(scan) => {
+                    let mut error = false;
+                    let mut result = Vec::new();
+                    for (dep, outcome) in scan {
+                        result.push(PolicyResult::new(dep, &outcome));
+                        if outcome.is_failed() {
+                            error = true;
+                        }
+                    }
+                    if error {
+                        NamesAreHard {
+                            status: AggregatedResult::Rejected,
+                            details: result,
+                        }
+                    } else {
+                        NamesAreHard {
+                            status: AggregatedResult::Accepted,
+                            details: result,
+                        }
+                    }
+                }
+                Err(e) => {
+                    let msg = format!("Error while scanning dependencies : {:?}", e);
+                    NamesAreHard {
+                        status: AggregatedResult::ConfigError(msg),
+                        details: vec![],
+                    }
+                }
+            }
+        };
+
+        match result.status {
+            AggregatedResult::Accepted => {
+                match self.output {
+                    Output::Text => todo!(),
+                    Output::Yaml => println!("{}", serde_yaml::to_string(&result).unwrap()),
+                    Output::Json => println!("{}", serde_json::to_string(&result).unwrap()),
+                }
+                Ok(())
+            }
+            AggregatedResult::ConfigError(msg) => bail!(msg),
+            AggregatedResult::Rejected => {
+                match self.output {
+                    Output::Text => todo!(),
+                    Output::Yaml => println!("{}", serde_yaml::to_string(&result).unwrap()),
+                    Output::Json => println!("{}", serde_json::to_string(&result).unwrap()),
+                }
+                bail!("")
+            }
         }
     }
 
-    async fn inner_run(&self) -> NamesAreHard {
-        let pom = MavenSource::new(dir_path(self.source.clone()));
-        let dependencies = pom.scan().await;
-        if let Err(e) = dependencies {
-            let msg = format!("failed scanning dependencies: {:?}", e);
-            return NamesAreHard {
-                status: AggregatedResult::ConfigError(msg),
-                details: vec![],
-            };
-        }
+    async fn get_deps(&self, config: Option<Config>) -> Result<Vec<Dependency>> {
+        let path = self.source.clone().unwrap_or(PathBuf::from("./"));
+        let source = AutoSource::find_source(path, config).await?;
+        source.scan().await
+    }
 
+    async fn enforcer_setup(&self) -> Result<Enforcer> {
         let mut enforcer = Enforcer::new(dir_path(Some(self.config.clone())), Pool::new()).await;
         enforcer.configure().await;
 
@@ -70,43 +118,10 @@ impl Once {
                     println!("\t - {}", i.message)
                 }
             }
-            let msg = "invalid enforcer configuration.".to_string();
-            return NamesAreHard {
-                status: AggregatedResult::ConfigError(msg),
-                details: vec![],
-            };
+            bail!("")
+        } else {
+            Ok(enforcer)
         }
-
-        return match enforcer.eval(dependencies.unwrap(), NoProgress).await {
-            Ok(scan) => {
-                let mut error = false;
-                let mut result = Vec::new();
-                for (dep, outcome) in scan {
-                    result.push(PolicyResult::new(dep, &outcome));
-                    if outcome.is_failed() {
-                        error = true;
-                    }
-                }
-                if error {
-                    NamesAreHard {
-                        status: AggregatedResult::Rejected,
-                        details: result,
-                    }
-                } else {
-                    NamesAreHard {
-                        status: AggregatedResult::Accepted,
-                        details: result,
-                    }
-                }
-            }
-            Err(e) => {
-                let msg = format!("Error while scanning dependencies : {:?}", e);
-                NamesAreHard {
-                    status: AggregatedResult::ConfigError(msg),
-                    details: vec![],
-                }
-            }
-        };
     }
 }
 

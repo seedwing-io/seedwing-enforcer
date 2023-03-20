@@ -7,6 +7,7 @@ rust-version = "1.66"
 [dependencies]
 anyhow = "1"
 async-trait = "0.1.64"
+cargo_metadata = "0.15.3"
 clap = { version = "4.1.7", features = ["derive", "env"] }
 env_logger = "0.10.0"
 log = "0.4.14"
@@ -24,7 +25,7 @@ serde_yaml = "0.9"
 openssl = { version = "*", optional = true }
 
 [features]
-vendored = [ "openssl/vendored" ]
+vendored = ["openssl/vendored"]
 
 [[bin]]
 name = "senf"
