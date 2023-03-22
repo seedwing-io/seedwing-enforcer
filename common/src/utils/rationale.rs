@@ -81,6 +81,7 @@ impl<'r> Rationalizer<'r> {
                     }
                 }
                 Rationale::Refinement(_, _) => {}
+                Rationale::Bound(_, _) => {}
             }
             html.push_str("</div>");
         } else if result.satisfied() {
@@ -235,6 +236,7 @@ impl<'r> Rationalizer<'r> {
                     Self::rationale_inner(html, refinement);
                 }
             }
+            Rationale::Bound(_, _) => {}
         }
     }
 }
