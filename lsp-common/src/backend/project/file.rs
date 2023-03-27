@@ -131,7 +131,7 @@ impl File {
         let mut diags = HashMap::<Url, Vec<Diagnostic>>::new();
 
         for (dependency, outcome) in outcome {
-            if let Outcome::Rejected(reason) = outcome {
+            if let Outcome::RejectedHtml(reason) = outcome {
                 if let Ok((url, range)) = source.highlight(&dependency) {
                     diags.entry(url).or_default().push(Diagnostic {
                         severity: Some(DiagnosticSeverity::WARNING),

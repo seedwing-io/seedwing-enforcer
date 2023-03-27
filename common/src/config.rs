@@ -30,8 +30,7 @@ pub struct EnforcerConfig {
 pub enum RationaleVariant {
     #[default]
     Html,
-    Yaml,
-    Json,
+    Raw,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]

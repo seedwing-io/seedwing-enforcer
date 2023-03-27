@@ -1,5 +1,6 @@
 //! Seedwing enforcer implementation
 
+use crate::config::RationaleVariant;
 use crate::enforcer::cache::DefaultCache;
 use crate::{
     config::{self, Config, Dependencies, FILE_NAME_YAML},
@@ -24,6 +25,7 @@ use std::{
     path::{Path, PathBuf},
     sync::Arc,
 };
+use seedwing_policy_engine::runtime::Response;
 use tokio::sync::RwLock;
 
 const DEFAULT_PACKAGE: &str = "enforcer";
@@ -246,12 +248,17 @@ impl<P: Progress, C: Cache> Runner<P, C> {
                 Some(outcome) => outcomes.push((d, outcome.clone())),
                 None => {
                     let input: RuntimeValue = d.clone().try_into()?;
-                    let outcome = world.evaluate(&requires, input, Default::default()).await?;
-                    let rationale =
-                        Rationalizer::new(&outcome).rationale(&self.config.enforcer.rationale);
-                    let outcome = match outcome.satisfied() {
+                    let evaluation = world.evaluate(&requires, input, Default::default()).await?;
+                    let outcome = match evaluation.satisfied() {
                         true => Outcome::Ok,
-                        false => Outcome::Rejected(rationale),
+                        false => match self.config.enforcer.rationale {
+                            RationaleVariant::Html => {
+                                let rationale = Rationalizer::new(&evaluation)
+                                    .rationale_html();
+                                Outcome::RejectedHtml(rationale)
+                            }
+                            RationaleVariant::Raw => Outcome::RejectedRaw(Response::new(&evaluation)),
+                        },
                     };
 
                     self.cache.store(&d, outcome.clone());
