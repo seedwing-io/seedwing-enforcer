@@ -11,12 +11,12 @@ impl<'r> Rationalizer<'r> {
     }
 
     pub fn rationale_html(&self) -> String {
-                let mut html = String::new();
-                html.push_str("<div>");
-                Self::rationale_inner(&mut html, self.result);
+        let mut html = String::new();
+        html.push_str("<div>");
+        Self::rationale_inner(&mut html, self.result);
 
-                html.push_str("<div>");
-                html
+        html.push_str("<div>");
+        html
     }
 
     pub fn rationale_inner(html: &mut String, result: &EvaluationResult) {

@@ -14,6 +14,7 @@ use crate::{
 };
 use lsp_types::{Diagnostic, DiagnosticSeverity};
 use ropey::Rope;
+use seedwing_policy_engine::runtime::Response;
 use seedwing_policy_engine::{
     lang::builder::Builder,
     runtime::{sources::Ephemeral, BuildError, RuntimeError, World},
@@ -25,7 +26,6 @@ use std::{
     path::{Path, PathBuf},
     sync::Arc,
 };
-use seedwing_policy_engine::runtime::Response;
 use tokio::sync::RwLock;
 
 const DEFAULT_PACKAGE: &str = "enforcer";
@@ -253,11 +253,12 @@ impl<P: Progress, C: Cache> Runner<P, C> {
                         true => Outcome::Ok,
                         false => match self.config.enforcer.rationale {
                             RationaleVariant::Html => {
-                                let rationale = Rationalizer::new(&evaluation)
-                                    .rationale_html();
+                                let rationale = Rationalizer::new(&evaluation).rationale_html();
                                 Outcome::RejectedHtml(rationale)
                             }
-                            RationaleVariant::Raw => Outcome::RejectedRaw(Response::new(&evaluation)),
+                            RationaleVariant::Raw => {
+                                Outcome::RejectedRaw(Response::new(&evaluation))
+                            }
                         },
                     };
 
