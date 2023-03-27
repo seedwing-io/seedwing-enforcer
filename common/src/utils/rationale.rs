@@ -1,6 +1,5 @@
-use crate::config::RationaleVariant;
 use seedwing_policy_engine::runtime::rationale::Rationale;
-use seedwing_policy_engine::runtime::{EvaluationResult, Output, Response};
+use seedwing_policy_engine::runtime::{EvaluationResult, Output};
 
 pub struct Rationalizer<'r> {
     result: &'r EvaluationResult,
@@ -11,25 +10,13 @@ impl<'r> Rationalizer<'r> {
         Self { result }
     }
 
-    pub fn rationale(&self, config: &RationaleVariant) -> String {
-        match config {
-            RationaleVariant::Html => {
-                let mut html = String::new();
-                html.push_str("<div>");
-                Self::rationale_inner(&mut html, self.result);
+    pub fn rationale_html(&self) -> String {
+        let mut html = String::new();
+        html.push_str("<div>");
+        Self::rationale_inner(&mut html, self.result);
 
-                html.push_str("<div>");
-                html
-            }
-            RationaleVariant::Yaml => {
-                let resp = Response::new(self.result);
-                serde_yaml::to_string(&resp).unwrap()
-            }
-            RationaleVariant::Json => {
-                let resp = Response::new(self.result);
-                serde_json::to_string(&resp).unwrap()
-            }
-        }
+        html.push_str("<div>");
+        html
     }
 
     pub fn rationale_inner(html: &mut String, result: &EvaluationResult) {
@@ -81,6 +68,7 @@ impl<'r> Rationalizer<'r> {
                     }
                 }
                 Rationale::Refinement(_, _) => {}
+                Rationale::Bound(_, _) => {}
             }
             html.push_str("</div>");
         } else if result.satisfied() {
@@ -235,6 +223,7 @@ impl<'r> Rationalizer<'r> {
                     Self::rationale_inner(html, refinement);
                 }
             }
+            Rationale::Bound(_, _) => {}
         }
     }
 }

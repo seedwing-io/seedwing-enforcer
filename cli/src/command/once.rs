@@ -147,6 +147,7 @@ pub struct NamesAreHard {
 pub struct PolicyResult {
     dependency: Dependency,
     outcome: Outcome,
+    /// Some helpful message if needed ?
     #[serde(skip_serializing_if = "Option::is_none")]
     message: Option<String>,
 }
@@ -160,14 +161,10 @@ pub enum AggregatedResult {
 
 impl PolicyResult {
     pub fn new(dependency: Dependency, outcome: &Outcome) -> PolicyResult {
-        let message = match outcome {
-            Outcome::Ok => None,
-            Outcome::Rejected(msg) => Some(msg.clone()),
-        };
         PolicyResult {
             dependency,
             outcome: outcome.clone(),
-            message,
+            message: None,
         }
     }
 }
