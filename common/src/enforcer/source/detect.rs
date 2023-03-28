@@ -1,7 +1,9 @@
 use crate::config::{Config, ManifestType};
 use crate::enforcer::source::cargo::CargoSource;
-use crate::enforcer::source::maven::MavenSource;
+use crate::enforcer::source::sbom::maven::MavenGenerator;
+use crate::enforcer::source::sbom::SBOM;
 use crate::enforcer::source::Source;
+use crate::utils::projects::{CARGO_FILE, MAVEN_FILE};
 use anyhow::{bail, Result};
 use std::io;
 use std::path::PathBuf;
@@ -18,8 +20,8 @@ impl AutoSource {
         if let Some(config) = config {
             if let Some(source_type) = config.enforcer.source {
                 match source_type {
-                    ManifestType::Cargo => Ok(Box::new(CargoSource::new(root))),
-                    ManifestType::Maven => Ok(Box::new(MavenSource::new(root))),
+                    ManifestType::Cargo => Ok(cargo(root)),
+                    ManifestType::Maven => Ok(maven(root)),
                 }
             } else {
                 autodetect(root)
@@ -30,24 +32,29 @@ impl AutoSource {
     }
 }
 
-const CARGO_FILE: &str = "Cargo.taml";
-const MAVEN_FILE: &str = "pom.xml";
-
 fn autodetect(path: PathBuf) -> Result<Box<dyn Source>> {
     if path.is_dir() {
         let cargo_path = path.join(CARGO_FILE);
         if cargo_path.exists() {
-            return Ok(Box::new(CargoSource::new(path)));
+            return Ok(cargo(path));
         }
 
         let maven_path = path.join(MAVEN_FILE);
         if maven_path.exists() {
-            return Ok(Box::new(MavenSource::new(path)));
+            return Ok(maven(path));
         }
     } else if path.ends_with(CARGO_FILE) {
-        return Ok(Box::new(CargoSource::new(path)));
+        return Ok(cargo(path));
     } else if path.ends_with(MAVEN_FILE) {
-        return Ok(Box::new(MavenSource::new(path)));
+        return Ok(maven(path));
     }
     bail!(io::ErrorKind::NotFound)
+}
+
+fn maven(root: impl Into<PathBuf>) -> Box<dyn Source> {
+    Box::new(SBOM::new(MavenGenerator::new(root)))
+}
+
+fn cargo(root: impl Into<PathBuf>) -> Box<dyn Source> {
+    Box::new(CargoSource::new(root))
 }

@@ -1,3 +1,4 @@
+use crate::utils::projects::MAVEN_FILE;
 use crate::{
     enforcer::{
         source::sbom::{CycloneDXFormat, CycloneDXVersion, Generator, Output, Type},
@@ -27,9 +28,9 @@ impl Generator for MavenGenerator {
     }
 
     fn highlight(&self, _: &Dependency) -> anyhow::Result<(Url, Range)> {
-        let content = fs::read_to_string(self.root.join("pom.xml"))?;
+        let content = fs::read_to_string(self.root.join(MAVEN_FILE))?;
         let h = Highlighter::new(&content)?;
-        let url = Url::from_file_path(self.root.join("pom.xml"))
+        let url = Url::from_file_path(self.root.join(MAVEN_FILE))
             .map_err(|()| anyhow!("Failed to create file URL"))?;
 
         // TODO: find actual dependency

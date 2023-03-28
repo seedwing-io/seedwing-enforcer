@@ -3,6 +3,7 @@ use ropey::Rope;
 
 pub mod pool;
 pub mod progress;
+pub mod projects;
 pub mod rationale;
 
 pub fn span_to_range(content: &Rope, span: std::ops::Range<usize>) -> Option<Range> {

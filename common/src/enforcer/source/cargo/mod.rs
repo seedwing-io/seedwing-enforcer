@@ -1,5 +1,6 @@
 use crate::enforcer::{source::Source, Dependency};
 use crate::highlight::Range;
+use crate::utils::projects::CARGO_FILE;
 use anyhow::anyhow;
 use async_trait::async_trait;
 use cargo_lock::package::Package;
@@ -43,7 +44,7 @@ impl Source for CargoSource {
     async fn scan(&self) -> anyhow::Result<Vec<Dependency>> {
         // find the project root, as the lockfile is not always along the `Cargo.toml` file.
         let metadata = cargo_metadata::MetadataCommand::new()
-            .manifest_path(&self.root.join("Cargo.toml"))
+            .manifest_path(&self.root.join(CARGO_FILE))
             .exec()?;
 
         let lockfile_path = metadata.workspace_root.join("Cargo.lock");
@@ -58,7 +59,7 @@ impl Source for CargoSource {
 
     fn highlight(&self, _dependency: &Dependency) -> anyhow::Result<(Url, Range)> {
         Ok((
-            Url::from_file_path(self.root.join("Cargo.toml"))
+            Url::from_file_path(self.root.join(CARGO_FILE))
                 .map_err(|()| anyhow!("Failed to build path URI"))?,
             Range::default(),
         ))
