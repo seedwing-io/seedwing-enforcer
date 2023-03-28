@@ -31,16 +31,21 @@ impl From<pom::Dependency> for MavenDependency {
     }
 }
 
+#[deprecated(
+    note = "This implementation ignores all kinds of cases, use the SBOM version in combination with the Maven source instead."
+)]
 pub struct MavenSource {
     root: PathBuf,
 }
 
+#[allow(deprecated)]
 impl MavenSource {
     pub fn new(root: impl Into<PathBuf>) -> Self {
         Self { root: root.into() }
     }
 }
 
+#[allow(deprecated)]
 #[async_trait]
 impl Source for MavenSource {
     async fn scan(&self) -> anyhow::Result<Vec<Dependency>> {
