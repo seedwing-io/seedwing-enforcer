@@ -34,15 +34,15 @@ impl Generator for MavenGenerator {
 
         // TODO: find actual dependency
         // TODO: find parent of transient dependency
-        // then fall back to dependencies section
-        // TODO: or full document
 
         let position = h
+            // find the main dependencies section
             .find_with(|doc| {
                 doc.root_element()
                     .children()
                     .find(|p| p.tag_name().name() == "dependencies")
             })
+            // then fall back to dependencies section
             .or_else(|_| {
                 h.find_with(|doc| {
                     doc.root_element()
@@ -51,6 +51,7 @@ impl Generator for MavenGenerator {
                         .and_then(|d| d.children().find(|p| p.tag_name().name() == "dependencies"))
                 })
             })?
+            // or the full document
             .unwrap_or_else(|| h.full_range());
 
         Ok((url, position))
@@ -87,7 +88,7 @@ impl MavenGenerator {
         let output = Command::new(mvn)
             .current_dir(&self.root)
             .args([
-                "org.cyclonedx:cyclonedx-maven-plugin:2.7.1:makeAggregateBom",
+                "org.cyclonedx:cyclonedx-maven-plugin:2.7.5:makeAggregateBom",
                 "-Dcyclonedx.skipAttach=true",
                 "-DoutputFormat=json",
                 "-DschemaVersion=1.3",
