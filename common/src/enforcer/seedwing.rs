@@ -17,6 +17,7 @@ use ropey::Rope;
 use seedwing_policy_engine::runtime::Response;
 use seedwing_policy_engine::{
     lang::builder::Builder,
+    lang::Severity,
     runtime::{sources::Ephemeral, BuildError, RuntimeError, World},
     value::{self, RuntimeValue},
 };
@@ -249,9 +250,8 @@ impl<P: Progress, C: Cache> Runner<P, C> {
                 None => {
                     let input: RuntimeValue = d.clone().try_into()?;
                     let evaluation = world.evaluate(&requires, input, Default::default()).await?;
-                    let outcome = match evaluation.satisfied() {
-                        true => Outcome::Ok,
-                        false => match self.config.enforcer.rationale {
+                    let outcome = match evaluation.severity() {
+                        Severity::Error => match self.config.enforcer.rationale {
                             RationaleVariant::Html => {
                                 let rationale = Rationalizer::new(&evaluation).rationale_html();
                                 Outcome::RejectedHtml(rationale)
@@ -260,6 +260,7 @@ impl<P: Progress, C: Cache> Runner<P, C> {
                                 Outcome::RejectedRaw(Response::new(&evaluation))
                             }
                         },
+                        _ => Outcome::Ok,
                     };
 
                     self.cache.store(&d, outcome.clone());

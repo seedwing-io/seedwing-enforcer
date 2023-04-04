@@ -7,6 +7,7 @@ pub mod cache;
 pub mod seedwing;
 pub mod source;
 
+pub use seedwing_policy_engine::lang::Severity;
 pub use seedwing_policy_engine::runtime::Response;
 
 #[derive(Clone, Debug, Serialize)]
@@ -18,9 +19,6 @@ pub enum Outcome {
 
 impl Outcome {
     pub fn is_failed(&self) -> bool {
-        match self {
-            Outcome::Ok => false,
-            _ => true,
-        }
+        matches!(self, Outcome::Ok)
     }
 }

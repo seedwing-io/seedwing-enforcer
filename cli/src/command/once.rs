@@ -1,3 +1,4 @@
+use crate::util::result_to_markdown;
 use anyhow::{bail, Result};
 use clap::{Args, ValueEnum};
 use seedwing_enforcer_common::config::Config;
@@ -24,7 +25,7 @@ pub struct Once {
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 pub enum Output {
     #[default]
-    Text,
+    Markdown,
     Json,
     Yaml,
 }
@@ -41,7 +42,7 @@ impl Once {
         let dependencies = self.get_deps(config).await;
 
         let result = if let Err(e) = dependencies {
-            let msg = format!("failed scanning dependencies: {:?}", e);
+            let msg = format!("{:?}", e);
             NamesAreHard {
                 status: AggregatedResult::ConfigError(msg),
                 details: vec![],
@@ -79,22 +80,16 @@ impl Once {
             }
         };
 
+        match self.output {
+            Output::Markdown => println!("{}", result_to_markdown(&result)),
+            Output::Yaml => println!("{}", serde_yaml::to_string(&result).unwrap()),
+            Output::Json => println!("{}", serde_json::to_string(&result).unwrap()),
+        }
+
         match result.status {
-            AggregatedResult::Accepted => {
-                match self.output {
-                    Output::Text => todo!(),
-                    Output::Yaml => println!("{}", serde_yaml::to_string(&result).unwrap()),
-                    Output::Json => println!("{}", serde_json::to_string(&result).unwrap()),
-                }
-                Ok(())
-            }
+            AggregatedResult::Accepted => Ok(()),
             AggregatedResult::ConfigError(msg) => bail!(msg),
             AggregatedResult::Rejected => {
-                match self.output {
-                    Output::Text => todo!(),
-                    Output::Yaml => println!("{}", serde_yaml::to_string(&result).unwrap()),
-                    Output::Json => println!("{}", serde_json::to_string(&result).unwrap()),
-                }
                 bail!("")
             }
         }
@@ -138,18 +133,15 @@ fn dir_path(path: Option<PathBuf>) -> PathBuf {
 
 #[derive(Debug, Serialize)]
 pub struct NamesAreHard {
-    status: AggregatedResult,
+    pub status: AggregatedResult,
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    details: Vec<PolicyResult>,
+    pub details: Vec<PolicyResult>,
 }
 
 #[derive(Debug, Serialize)]
 pub struct PolicyResult {
-    dependency: Dependency,
-    outcome: Outcome,
-    /// Some helpful message if needed ?
-    #[serde(skip_serializing_if = "Option::is_none")]
-    message: Option<String>,
+    pub dependency: Dependency,
+    pub outcome: Outcome,
 }
 
 #[derive(Debug, Serialize)]
@@ -164,7 +156,6 @@ impl PolicyResult {
         PolicyResult {
             dependency,
             outcome: outcome.clone(),
-            message: None,
         }
     }
 }

@@ -1,6 +1,6 @@
 [patch.crates-io]
 #seedwing-policy-engine = { path = "../seedwing-policy/engine" }
-seedwing-policy-engine = { git = "https://github.com/seedwing-io/seedwing-policy", rev = "e2f0cbbfce54331aa37f306584d5b5891ecfcf6f" }
+seedwing-policy-engine = { git = "https://github.com/seedwing-io/seedwing-policy", rev = "32f23edebcf71fef4ac39a737ca6ec5c2cd77115" }
 
 [workspace]
 members = [

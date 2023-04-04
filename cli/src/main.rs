@@ -4,6 +4,7 @@ use std::process::exit;
 
 mod cli;
 mod command;
+mod util;
 
 #[tokio::main]
 async fn main() {
