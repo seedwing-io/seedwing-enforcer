@@ -1,3 +1,4 @@
+use seedwing_policy_engine::lang::Severity;
 use seedwing_policy_engine::runtime::rationale::Rationale;
 use seedwing_policy_engine::runtime::{EvaluationResult, Output};
 
@@ -10,17 +11,17 @@ impl<'r> Rationalizer<'r> {
         Self { result }
     }
 
-    pub fn rationale_html(&self) -> String {
+    pub fn rationale(&self) -> String {
         let mut html = String::new();
         html.push_str("<div>");
         Self::rationale_inner(&mut html, self.result);
 
-        html.push_str("<div>");
+        html.push_str("</div>");
         html
     }
 
-    pub fn rationale_inner(html: &mut String, result: &EvaluationResult) {
-        if result.satisfied() {
+    fn rationale_inner(html: &mut String, result: &EvaluationResult) {
+        if result.severity() < Severity::Error {
             html.push_str("<div class='entry satisfied'>");
         } else {
             html.push_str("<div class='entry unsatisfied'>");
@@ -39,18 +40,19 @@ impl<'r> Rationalizer<'r> {
 
         if let Some(name) = result.ty().name() {
             html.push_str("<div>");
-            if result.satisfied() {
+            if result.severity() < Severity::Error {
                 html.push_str(
-                    format!("<div>Type <code>{name}</code> was satisfied</div>").as_str(),
+                    format!("<div>Pattern <code>{name}</code> was satisfied</div>").as_str(),
                 );
             } else {
                 html.push_str(
-                    format!("<div>Type <code>{name}</code> was not satisfied</div>").as_str(),
+                    format!("<div>Pattern <code>{name}</code> was not satisfied</div>").as_str(),
                 );
             }
 
             match result.rationale() {
                 Rationale::Anything => {}
+                Rationale::Bound(_, _) => {}
                 Rationale::Nothing => {}
                 Rationale::Chain(_) => {}
                 Rationale::Object(_) => {}
@@ -62,16 +64,18 @@ impl<'r> Rationalizer<'r> {
                 Rationale::Const(_) => {}
                 Rationale::Primordial(_) => {}
                 Rationale::Expression(_) => {}
-                Rationale::Function(_, _, supporting) => {
+                Rationale::Function {
+                    severity: _,
+                    rationale: _,
+                    supporting,
+                } => {
                     for each in supporting {
                         Self::rationale_inner(html, each);
                     }
                 }
-                Rationale::Refinement(_, _) => {}
-                Rationale::Bound(_, _) => {}
             }
             html.push_str("</div>");
-        } else if result.satisfied() {
+        } else if result.severity() < Severity::Error {
             html.push_str("<div>was satisfied</div>");
         } else {
             html.push_str("<div>was not satisfied</div>");
@@ -92,15 +96,16 @@ impl<'r> Rationalizer<'r> {
         html.push_str("</div>");
     }
 
-    pub fn supported_by(html: &mut String, result: &EvaluationResult) {
+    fn supported_by(html: &mut String, result: &EvaluationResult) {
         match result.rationale() {
             Rationale::Anything => {
                 html.push_str("<div>anything is satisfied by anything</div>");
             }
+            Rationale::Bound(_, _) => {}
             Rationale::Nothing => {}
             Rationale::Object(fields) => {
                 html.push_str("<div class='object'>");
-                if result.rationale().satisfied() {
+                if result.severity() < Severity::Error {
                     html.push_str("<div class='reason'>because all fields were satisfied:</div>");
                 } else {
                     html.push_str(
@@ -109,29 +114,27 @@ impl<'r> Rationalizer<'r> {
                 }
                 for (name, result) in fields {
                     if let Some(result) = result {
-                        if let Rationale::MissingField(_) = result.rationale() {
-                            html.push_str("<div class='field unsatisfied'>");
-                            html.push_str(format!("field <code>{name}</code> is missing").as_str());
-                            html.push_str("</div>");
+                        if result.severity() < Severity::Error {
+                            html.push_str("<div class='field satisfied'>");
                         } else {
-                            if result.satisfied() {
-                                html.push_str("<div class='field satisfied'>");
-                            } else {
-                                html.push_str("<div class='field unsatisfied'>");
-                            }
-                            html.push_str("<div class='field-name'>field <code>");
-                            html.push_str(name.as_str());
-                            html.push_str("</code></div>");
-                            Self::rationale_inner(html, result);
-                            html.push_str("</div>");
+                            html.push_str("<div class='field unsatisfied'>");
                         }
+                        html.push_str("<div class='field-name'>field <code>");
+                        html.push_str(name.as_str());
+                        html.push_str("</code></div>");
+                        Self::rationale_inner(html, result);
+                        html.push_str("</div>");
+                    } else {
+                        html.push_str("<div class='field unsatisfied'>");
+                        html.push_str(format!("field <code>{name}</code> is missing").as_str());
+                        html.push_str("</div>");
                     }
                 }
                 html.push_str("</div>");
             }
             Rationale::List(terms) => {
                 html.push_str("<div class='list'>");
-                if result.rationale().satisfied() {
+                if result.severity() < Severity::Error {
                     html.push_str("<div class='reason'>because all members were satisfied:</div>");
                 } else {
                     html.push_str(
@@ -139,7 +142,7 @@ impl<'r> Rationalizer<'r> {
                     );
                 }
                 for element in terms {
-                    if result.satisfied() {
+                    if result.severity() < Severity::Error {
                         html.push_str("<div class='element satisfied'>");
                     } else {
                         html.push_str("<div class='element unsatisfied'>");
@@ -151,13 +154,13 @@ impl<'r> Rationalizer<'r> {
             }
             Rationale::Chain(terms) => {
                 html.push_str("<div class='chain'>");
-                if result.rationale().satisfied() {
+                if result.severity() < Severity::Error {
                     html.push_str("<div class='reason'>because the chain was satisfied:</div>");
                 } else {
                     html.push_str("<div class='reason'>because the chain was not satisfied:</div>");
                 }
                 for element in terms {
-                    if result.satisfied() {
+                    if result.severity() < Severity::Error {
                         html.push_str("<div class='element satisfied'>");
                     } else {
                         html.push_str("<div class='element unsatisfied'>");
@@ -182,48 +185,42 @@ impl<'r> Rationalizer<'r> {
             Rationale::Const(_) => {}
             Rationale::Primordial(_) => {}
             Rationale::Expression(_) => {}
-            Rationale::Function(val, _, supporting) => {
-                if *val {
-                    match result.raw_output() {
-                        Output::None => {
-                            todo!("should not get here")
-                        }
-                        Output::Identity => {
-                            //html.push_str("<div class='function'>");
-                            //html.push_str( "function was satisfied");
-                            //html.push_str("</div>");
-                        }
-                        Output::Transform(output) => {
-                            html.push_str("<div class='function'>");
-                            html.push_str("and produced a value");
-
-                            let output_json = output.as_json();
-                            let output_json = serde_json::to_string_pretty(&output_json).unwrap();
-                            let output_json = output_json.replace('<', "&lt;");
-                            let output_json = output_json.replace('>', "&gt;");
-                            html.push_str("<div class='output'>");
-                            html.push_str("<pre>");
-                            html.push_str(output_json.as_str());
-                            html.push_str("</pre>");
-                            html.push_str("</div>");
-
-                            html.push_str("</div>");
-                        }
+            Rationale::Function {
+                severity: _,
+                rationale: _,
+                supporting: _,
+            } => {
+                match result.raw_output() {
+                    Output::Identity => {
+                        //html.push_str("<div class='function'>");
+                        //html.push_str( "function was satisfied");
+                        //html.push_str("</div>");
                     }
-                    if !supporting.is_empty() {
-                        for e in supporting {
-                            Self::rationale_inner(html, e);
-                        }
+                    Output::Transform(output) => {
+                        html.push_str("<div class='function'>");
+                        html.push_str("and produced a value");
+
+                        let output_json = output.as_json();
+                        let output_json = serde_json::to_string_pretty(&output_json).unwrap();
+                        let output_json = output_json.replace('<', "&lt;");
+                        let output_json = output_json.replace('>', "&gt;");
+                        html.push_str("<div class='output'>");
+                        html.push_str("<pre>");
+                        html.push_str(output_json.as_str());
+                        html.push_str("</pre>");
+                        html.push_str("</div>");
+
+                        html.push_str("</div>");
                     }
                 }
-            }
-            Rationale::Refinement(primary, refinement) => {
-                Self::rationale_inner(html, primary);
-                if let Some(refinement) = refinement {
-                    Self::rationale_inner(html, refinement);
+                /*
+                if !supporting.is_empty() {
+                    for e in supporting {
+                        Self::rationale_inner(html, e);
+                    }
                 }
+                 */
             }
-            Rationale::Bound(_, _) => {}
         }
     }
 }

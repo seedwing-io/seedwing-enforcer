@@ -30,9 +30,6 @@ body.vscode-light {
   --sw-field-border-color: #555;
 }
 
-.sw-rationale {
-}
-
 .sw-rationale code {
   background-color: var(--vscode-editor-background);
   color: var(--vscode-editor-foreground);
@@ -70,8 +67,7 @@ body.vscode-light {
   border: none;
 }
 
-.sw-rationale div.field-name {
-}
+.sw-rationale div.field-name {}
 
 .sw-rationale div.satisfied {
   background-color: var(--sw-satisfied-background);
@@ -90,8 +86,7 @@ body.vscode-light {
 }
 
 .sw-rationale .input,
-.sw-rationale .output
-{
+.sw-rationale .output {
 
   font-family: var(--vscode-editor-font-family);
   font-size: var(--vscode-editor-font-size);
@@ -104,4 +99,3 @@ body.vscode-light {
   margin-top: .5rem;
   margin-bottom: .5rem;
 }
-

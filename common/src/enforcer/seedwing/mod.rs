@@ -1,23 +1,24 @@
 //! Seedwing enforcer implementation
 
-use crate::config::RationaleVariant;
-use crate::enforcer::cache::DefaultCache;
+pub mod render;
+
 use crate::{
     config::{self, Config, Dependencies, FILE_NAME_YAML},
-    enforcer::{cache::Cache, Dependency, Outcome},
+    enforcer::{
+        cache::{Cache, DefaultCache},
+        Dependency,
+    },
     utils::{
         pool::{Pool, PoolError},
         progress::{NoProgress, Progress, ProgressRunner},
-        rationale::Rationalizer,
         span_to_range,
     },
 };
 use lsp_types::{Diagnostic, DiagnosticSeverity};
 use ropey::Rope;
-use seedwing_policy_engine::runtime::Response;
 use seedwing_policy_engine::{
     lang::builder::Builder,
-    runtime::{sources::Ephemeral, BuildError, RuntimeError, World},
+    runtime::{sources::Ephemeral, BuildError, Response, RuntimeError, World},
     value::{self, RuntimeValue},
 };
 use std::{
@@ -86,7 +87,7 @@ impl Enforcer {
         &self,
         dependencies: Vec<Dependency>,
         progress: P,
-    ) -> Result<Vec<(Dependency, Outcome)>, Error>
+    ) -> Result<Vec<(Dependency, Response)>, Error>
     where
         P: Progress + 'static,
     {
@@ -182,7 +183,7 @@ impl Inner {
         &self,
         dependencies: Vec<Dependency>,
         progress: P,
-    ) -> Result<Vec<(Dependency, Outcome)>, Error>
+    ) -> Result<Vec<(Dependency, Response)>, Error>
     where
         P: Progress + 'static,
     {
@@ -207,8 +208,11 @@ impl Inner {
     }
 }
 
-fn all_ok(dependencies: Vec<Dependency>) -> Vec<(Dependency, Outcome)> {
-    dependencies.into_iter().map(|d| (d, Outcome::Ok)).collect()
+fn all_ok(dependencies: Vec<Dependency>) -> Vec<(Dependency, Response)> {
+    dependencies
+        .into_iter()
+        .map(|d| (d, Response::default()))
+        .collect()
 }
 
 struct Runner<P: Progress, C: Cache> {
@@ -222,14 +226,16 @@ impl<P: Progress, C: Cache> Runner<P, C> {
     async fn eval(
         &self,
         dependencies: Vec<Dependency>,
-    ) -> Result<Vec<(Dependency, Outcome)>, Error> {
+    ) -> Result<Vec<(Dependency, Response)>, Error> {
         let progress = self
             .progress
             .start("Scanning dependencies", dependencies.len() + 1)
             .await;
 
+        // if we don't have a dependency config
         let dep_config = match &self.config.dependencies {
             Some(dep_config) => dep_config,
+            // mark them all as "ok"
             None => return Ok(all_ok(dependencies)),
         };
 
@@ -249,22 +255,10 @@ impl<P: Progress, C: Cache> Runner<P, C> {
                 None => {
                     let input: RuntimeValue = d.clone().try_into()?;
                     let evaluation = world.evaluate(&requires, input, Default::default()).await?;
-                    let outcome = match evaluation.satisfied() {
-                        true => Outcome::Ok,
-                        false => match self.config.enforcer.rationale {
-                            RationaleVariant::Html => {
-                                let rationale = Rationalizer::new(&evaluation).rationale_html();
-                                Outcome::RejectedHtml(rationale)
-                            }
-                            RationaleVariant::Raw => {
-                                Outcome::RejectedRaw(Response::new(&evaluation))
-                            }
-                        },
-                    };
+                    let response = Response::new(&evaluation);
+                    self.cache.store(&d, response.clone());
 
-                    self.cache.store(&d, outcome.clone());
-
-                    outcomes.push((d, outcome));
+                    outcomes.push((d, response));
                 }
             }
         }

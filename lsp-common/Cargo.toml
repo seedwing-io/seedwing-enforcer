@@ -21,6 +21,7 @@ walkdir = "2"
 uuid = { version = "1.3.0", features = ["v4"] }
 
 seedwing-enforcer-common = { path = "../common" }
+seedwing-policy-engine = { version = "0.1.0-alpha.9", default-features = false, features = [] }
 
 [dev-dependencies]
 tokio = { version = "*", features = ["full"] }

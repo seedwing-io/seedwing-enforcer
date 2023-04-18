@@ -1,7 +1,3 @@
-[patch.crates-io]
-#seedwing-policy-engine = { path = "../seedwing-policy/engine" }
-seedwing-policy-engine = { git = "https://github.com/seedwing-io/seedwing-policy", rev = "bedbf11241fab341bff11302f727dc17e599af9e" }
-
 [workspace]
 members = [
     "common",
@@ -11,3 +7,7 @@ members = [
 exclude = [
     "lsp-wasi"
 ]
+
+[patch.crates-io]
+#seedwing-policy-engine = { path = "../seedwing-policy/engine" }
+seedwing-policy-engine = { git = "https://github.com/seedwing-io/seedwing-policy", rev = "06eb6b8a97795cf8610d580bb8f47386c05e4162" }
