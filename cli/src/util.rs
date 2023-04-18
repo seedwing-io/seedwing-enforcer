@@ -1,6 +1,6 @@
 use crate::command::once::{AggregatedResult, NamesAreHard};
-use seedwing_enforcer_common::enforcer::Outcome;
-use seedwing_enforcer_common::enforcer::Severity;
+use seedwing_policy_engine::lang::Severity;
+use seedwing_policy_engine::runtime::response::Collector;
 
 pub fn result_to_markdown(data: &NamesAreHard) -> String {
     let mut markdown = String::new();
@@ -25,16 +25,32 @@ pub fn result_to_markdown(data: &NamesAreHard) -> String {
 
     // Populate the table with dependencies
     for result in &data.details {
-        match &result.outcome {
-            Outcome::Ok => markdown.push_str(&format!("| ✔ | {} | | \n", &result.dependency.purl)),
-            Outcome::RejectedHtml(_) => unreachable!(),
-            Outcome::RejectedRaw(resp) => {
-                let resp = resp.clone().collapse(Severity::Error);
-                let reason = resp.reason.clone();
-                let pattern = resp.name.clone();
-                println!("{}", serde_yaml::to_string(&resp).unwrap());
+        match result.response.severity {
+            Severity::None => markdown.push_str(&format!(
+                "| {} | {} | | \n",
+                severity_as_emoji(Severity::None),
+                &result.dependency.purl
+            )),
+            severity => {
+                let resp = Collector::new(&result.response)
+                    .highest_severity()
+                    .collect();
+
+                let reasons = resp
+                    .into_iter()
+                    .map(|resp| {
+                        format!(
+                            "`{name}` : {reason}",
+                            name = resp.name,
+                            reason = resp.reason
+                        )
+                    })
+                    .collect::<Vec<_>>()
+                    .join("<br>");
+
                 markdown.push_str(&format!(
-                    "| ❌ | {} |{pattern} : {reason} | \n",
+                    "| {} | {} | {reasons} | \n",
+                    severity_as_emoji(severity),
                     &result.dependency.purl
                 ))
             }
@@ -42,4 +58,13 @@ pub fn result_to_markdown(data: &NamesAreHard) -> String {
     }
 
     markdown
+}
+
+fn severity_as_emoji(severity: Severity) -> &'static str {
+    match severity {
+        Severity::None => "✔",
+        Severity::Advice => "💡",
+        Severity::Warning => "⚠️",
+        Severity::Error => "❌",
+    }
 }
