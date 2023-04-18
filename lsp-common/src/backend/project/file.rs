@@ -6,6 +6,7 @@ use crate::{
     },
     protocol::{commands::SHOW_REPORT, types::Report},
 };
+use seedwing_enforcer_common::enforcer::seedwing::render::ResponseRenderer;
 use seedwing_enforcer_common::{
     enforcer::{
         seedwing::{self, Enforcer},
@@ -13,9 +14,13 @@ use seedwing_enforcer_common::{
             sbom::{maven::MavenGenerator, SBOM},
             Source,
         },
-        Dependency, Outcome,
+        Dependency,
     },
     highlight,
+};
+use seedwing_policy_engine::{
+    lang::Severity,
+    runtime::{response::Collector, Response},
 };
 use serde_json::Value;
 use std::{collections::HashMap, io, path::PathBuf};
@@ -118,7 +123,7 @@ impl File {
 
         // evaluate policies
 
-        let outcome = self
+        let response = self
             .enforcer
             .eval(
                 self.dependencies.clone(),
@@ -130,19 +135,35 @@ impl File {
 
         let mut diags = HashMap::<Url, Vec<Diagnostic>>::new();
 
-        for (dependency, outcome) in outcome {
-            if let Outcome::RejectedHtml(reason) = outcome {
-                if let Ok((url, range)) = source.highlight(&dependency) {
-                    diags.entry(url).or_default().push(Diagnostic {
-                        severity: Some(DiagnosticSeverity::WARNING),
-                        message: format!(
-                            "Failed to validate policy for dependency: {}",
-                            dependency.purl
-                        ),
-                        range: range.into(),
-                        data: Self::make_data(&dependency, &reason).ok(),
-                        ..Default::default()
-                    });
+        for (dependency, response) in response {
+            match response.severity {
+                Severity::None => {
+                    // ignore succeeded entries
+                }
+                severity => {
+                    if let Ok((url, range)) = source.highlight(&dependency) {
+                        diags.entry(url).or_default().push({
+                            let collected = Collector::new(&response).highest_severity().collect();
+                            let message = collected
+                                .iter()
+                                .map(|r| r.reason.as_str())
+                                .collect::<Vec<_>>()
+                                .join(", ");
+
+                            Diagnostic {
+                                severity: match severity {
+                                    Severity::None => None,
+                                    Severity::Advice => Some(DiagnosticSeverity::INFORMATION),
+                                    Severity::Warning => Some(DiagnosticSeverity::WARNING),
+                                    Severity::Error => Some(DiagnosticSeverity::ERROR),
+                                },
+                                message: format!("{}: {}", dependency.purl, message),
+                                range: range.into(),
+                                data: Self::make_data(&dependency, &collected, &response).ok(),
+                                ..Default::default()
+                            }
+                        });
+                    }
                 }
             }
         }
@@ -152,10 +173,30 @@ impl File {
         Ok(())
     }
 
-    fn make_data(dependency: &Dependency, reason: &str) -> anyhow::Result<Value> {
+    fn make_data(
+        dependency: &Dependency,
+        collected: &[Response],
+        original: &Response,
+    ) -> anyhow::Result<Value> {
         Ok(serde_json::to_value(&Report {
             title: dependency.purl.to_string(),
-            html: reason.to_string(),
+            html: format!(
+                r#"
+<div class="swe-response">
+    <div class="swe-reasons">
+        {response}
+    </div>
+    <div class="swe-response-raw">
+        <details>
+            <summary>Raw JSON</summary>
+            <code><pre>{raw}</pre></code>
+        </details>
+    </div>
+</div>
+"#,
+                response = ResponseRenderer(collected).render(),
+                raw = serde_json::to_string_pretty(original).unwrap_or_default()
+            ),
         })?)
     }
 

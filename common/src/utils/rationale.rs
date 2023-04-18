@@ -11,17 +11,17 @@ impl<'r> Rationalizer<'r> {
         Self { result }
     }
 
-    pub fn rationale_html(&self) -> String {
+    pub fn rationale(&self) -> String {
         let mut html = String::new();
         html.push_str("<div>");
         Self::rationale_inner(&mut html, self.result);
 
-        html.push_str("<div>");
+        html.push_str("</div>");
         html
     }
 
     pub fn rationale_inner(html: &mut String, result: &EvaluationResult) {
-        if result.severity() == Severity::Error {
+        if result.severity() < Severity::Error {
             html.push_str("<div class='entry satisfied'>");
         } else {
             html.push_str("<div class='entry unsatisfied'>");
@@ -40,13 +40,13 @@ impl<'r> Rationalizer<'r> {
 
         if let Some(name) = result.ty().name() {
             html.push_str("<div>");
-            if result.severity() == Severity::Error {
+            if result.severity() < Severity::Error {
                 html.push_str(
-                    format!("<div>Type <code>{name}</code> was satisfied</div>").as_str(),
+                    format!("<div>Pattern <code>{name}</code> was satisfied</div>").as_str(),
                 );
             } else {
                 html.push_str(
-                    format!("<div>Type <code>{name}</code> was not satisfied</div>").as_str(),
+                    format!("<div>Pattern <code>{name}</code> was not satisfied</div>").as_str(),
                 );
             }
 
@@ -75,7 +75,7 @@ impl<'r> Rationalizer<'r> {
                 Rationale::Bound(_, _) => {}
             }
             html.push_str("</div>");
-        } else if result.severity() == Severity::Error {
+        } else if result.severity() < Severity::Error {
             html.push_str("<div>was satisfied</div>");
         } else {
             html.push_str("<div>was not satisfied</div>");
@@ -96,7 +96,7 @@ impl<'r> Rationalizer<'r> {
         html.push_str("</div>");
     }
 
-    pub fn supported_by(html: &mut String, result: &EvaluationResult) {
+    fn supported_by(html: &mut String, result: &EvaluationResult) {
         match result.rationale() {
             Rationale::Anything => {
                 html.push_str("<div>anything is satisfied by anything</div>");
@@ -104,7 +104,7 @@ impl<'r> Rationalizer<'r> {
             Rationale::Nothing => {}
             Rationale::Object(fields) => {
                 html.push_str("<div class='object'>");
-                if result.rationale().severity() == Severity::Error {
+                if result.severity() < Severity::Error {
                     html.push_str("<div class='reason'>because all fields were satisfied:</div>");
                 } else {
                     html.push_str(
@@ -113,12 +113,10 @@ impl<'r> Rationalizer<'r> {
                 }
                 for (name, result) in fields {
                     if let Some(result) = result {
-                        if let Rationale::MissingField(_) = result.rationale() {
-                            html.push_str("<div class='field unsatisfied'>");
-                            html.push_str(format!("field <code>{name}</code> is missing").as_str());
-                            html.push_str("</div>");
+                        if result.severity() < Severity::Error {
+                            html.push_str("<div class='field satisfied'>");
                         } else {
-                            if result.severity() == Severity::Error {
+                            if result.severity() <= Severity::Error {
                                 html.push_str("<div class='field satisfied'>");
                             } else {
                                 html.push_str("<div class='field unsatisfied'>");
@@ -129,13 +127,22 @@ impl<'r> Rationalizer<'r> {
                             Self::rationale_inner(html, result);
                             html.push_str("</div>");
                         }
+                        html.push_str("<div class='field-name'>field <code>");
+                        html.push_str(name.as_str());
+                        html.push_str("</code></div>");
+                        Self::rationale_inner(html, result);
+                        html.push_str("</div>");
+                    } else {
+                        html.push_str("<div class='field unsatisfied'>");
+                        html.push_str(format!("field <code>{name}</code> is missing").as_str());
+                        html.push_str("</div>");
                     }
                 }
                 html.push_str("</div>");
             }
             Rationale::List(terms) => {
                 html.push_str("<div class='list'>");
-                if result.rationale().severity() == Severity::Error {
+                if result.severity() < Severity::Error {
                     html.push_str("<div class='reason'>because all members were satisfied:</div>");
                 } else {
                     html.push_str(
@@ -143,7 +150,7 @@ impl<'r> Rationalizer<'r> {
                     );
                 }
                 for element in terms {
-                    if result.severity() == Severity::Error {
+                    if result.severity() < Severity::Error {
                         html.push_str("<div class='element satisfied'>");
                     } else {
                         html.push_str("<div class='element unsatisfied'>");
@@ -155,13 +162,13 @@ impl<'r> Rationalizer<'r> {
             }
             Rationale::Chain(terms) => {
                 html.push_str("<div class='chain'>");
-                if result.rationale().severity() == Severity::Error {
+                if result.severity() < Severity::Error {
                     html.push_str("<div class='reason'>because the chain was satisfied:</div>");
                 } else {
                     html.push_str("<div class='reason'>because the chain was not satisfied:</div>");
                 }
                 for element in terms {
-                    if result.severity() == Severity::Error {
+                    if result.severity() < Severity::Error {
                         html.push_str("<div class='element satisfied'>");
                     } else {
                         html.push_str("<div class='element unsatisfied'>");

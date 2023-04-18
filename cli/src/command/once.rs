@@ -3,9 +3,11 @@ use anyhow::{bail, Result};
 use clap::{Args, ValueEnum};
 use seedwing_enforcer_common::config::Config;
 use seedwing_enforcer_common::{
-    enforcer::{seedwing::Enforcer, source::AutoSource, Dependency, Outcome},
+    enforcer::{seedwing::Enforcer, source::AutoSource, Dependency},
     utils::{pool::Pool, progress::NoProgress},
 };
+use seedwing_policy_engine::lang::Severity;
+use seedwing_policy_engine::runtime::Response;
 use serde::Serialize;
 use std::{fmt::Debug, path::PathBuf};
 
@@ -54,7 +56,7 @@ impl Once {
                     let mut result = Vec::new();
                     for (dep, outcome) in scan {
                         result.push(PolicyResult::new(dep, &outcome));
-                        if outcome.is_failed() {
+                        if outcome.severity == Severity::Error {
                             error = true;
                         }
                     }
@@ -141,7 +143,7 @@ pub struct NamesAreHard {
 #[derive(Debug, Serialize)]
 pub struct PolicyResult {
     pub dependency: Dependency,
-    pub outcome: Outcome,
+    pub response: Response,
 }
 
 #[derive(Debug, Serialize)]
@@ -152,10 +154,10 @@ pub enum AggregatedResult {
 }
 
 impl PolicyResult {
-    pub fn new(dependency: Dependency, outcome: &Outcome) -> PolicyResult {
+    pub fn new(dependency: Dependency, response: &Response) -> PolicyResult {
         PolicyResult {
             dependency,
-            outcome: outcome.clone(),
+            response: response.clone(),
         }
     }
 }
