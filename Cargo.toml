@@ -10,4 +10,4 @@ exclude = [
 
 [patch.crates-io]
 #seedwing-policy-engine = { path = "../seedwing-policy/engine" }
-seedwing-policy-engine = { git = "https://github.com/seedwing-io/seedwing-policy", rev = "2d2a15099cceb0ec57148fd86c150669ee4a40ae" }
+seedwing-policy-engine = { git = "https://github.com/seedwing-io/seedwing-policy", rev = "5e29d20f46fa633534f36bffe5744a3bf7b8e185" }
