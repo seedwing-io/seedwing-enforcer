@@ -23,14 +23,6 @@ pub struct EnforcerConfig {
     pub source: Option<ManifestType>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum RationaleVariant {
-    #[default]
-    Html,
-    Raw,
-}
-
 #[derive(Debug, Copy, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum ManifestType {
     Cargo,
