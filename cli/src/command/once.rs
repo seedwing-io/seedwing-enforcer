@@ -9,16 +9,16 @@ use seedwing_enforcer_common::{
 use seedwing_policy_engine::lang::Severity;
 use seedwing_policy_engine::runtime::Response;
 use serde::Serialize;
+use std::env::current_dir;
 use std::{fmt::Debug, path::PathBuf};
 
 #[derive(Args, Debug)]
 #[command(about = "Scan dependencies once", allow_external_subcommands = true)]
 pub struct Once {
+    /// The root of the project. Defaults to the current directory.
     #[arg(short, long)]
-    source: Option<PathBuf>,
-    #[arg(short, long)]
-    config: PathBuf,
-    /// choose the output format
+    root: Option<PathBuf>,
+    /// The output format
     #[arg(short, long, value_enum, default_value_t = Output::Markdown)]
     output: Output,
 }
@@ -32,7 +32,7 @@ pub enum Output {
 }
 
 impl Once {
-    pub async fn run(self) -> anyhow::Result<()> {
+    pub async fn run(self) -> Result<()> {
         let enforcer = self
             .enforcer_setup()
             .await
@@ -42,14 +42,15 @@ impl Once {
 
         let dependencies = self.get_deps(config).await;
 
-        let result = if let Err(e) = dependencies {
-            let msg = format!("{:?}", e);
-            NamesAreHard {
-                status: AggregatedResult::ConfigError(msg),
-                details: vec![],
+        let result = match dependencies {
+            Err(err) => {
+                let msg = format!("{:?}", err);
+                NamesAreHard {
+                    status: AggregatedResult::ConfigError(msg),
+                    details: vec![],
+                }
             }
-        } else {
-            match enforcer.eval(dependencies.unwrap(), NoProgress).await {
+            Ok(dependencies) => match enforcer.eval(dependencies, NoProgress).await {
                 Ok(scan) => {
                     let mut error = false;
                     let mut result = Vec::new();
@@ -78,7 +79,7 @@ impl Once {
                         details: vec![],
                     }
                 }
-            }
+            },
         };
 
         match self.output {
@@ -97,14 +98,17 @@ impl Once {
     }
 
     async fn get_deps(&self, config: Option<Config>) -> Result<Vec<Dependency>> {
-        let path = self.source.clone().unwrap_or(PathBuf::from("./"));
+        let path = self.root.clone().unwrap_or(PathBuf::from("./"));
         let source = AutoSource::find_source(path, config).await?;
         source.scan().await
     }
 
     async fn enforcer_setup(&self) -> Result<Enforcer> {
-        let mut enforcer = Enforcer::new(dir_path(Some(self.config.clone())), Pool::new()).await;
-        enforcer.configure().await;
+        let root = match &self.root {
+            Some(root) => root.clone(),
+            None => current_dir()?,
+        };
+        let enforcer = Enforcer::new(root, Pool::new()).await;
 
         let diag = enforcer.diagnostics().await;
         if !diag.is_empty() {
@@ -118,17 +122,6 @@ impl Once {
         } else {
             Ok(enforcer)
         }
-    }
-}
-
-// todo allow providing full path to files and not assume file names
-fn dir_path(path: Option<PathBuf>) -> PathBuf {
-    let path = path.unwrap_or_else(|| PathBuf::from("./"));
-
-    if path.is_file() {
-        path.parent().unwrap().to_path_buf()
-    } else {
-        path
     }
 }
 
