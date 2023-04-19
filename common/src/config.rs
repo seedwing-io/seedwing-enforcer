@@ -20,8 +20,6 @@ pub struct Dependencies {
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct EnforcerConfig {
-    #[serde(default)]
-    pub rationale: RationaleVariant,
     pub source: Option<ManifestType>,
 }
 
