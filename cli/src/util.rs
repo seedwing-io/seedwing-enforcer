@@ -12,7 +12,7 @@ pub fn result_to_markdown(data: &NamesAreHard) -> String {
         AggregatedResult::Accepted => markdown.push_str("✔ Accepted ✔️\n"),
         AggregatedResult::Rejected => markdown.push_str("❌ Rejected ❌\n"),
         AggregatedResult::ConfigError(_) => {
-            markdown.push_str("Configuration Error ❌\n");
+            markdown.push_str("🚨 Configuration Error 🚨\n");
             return markdown;
         }
     }
