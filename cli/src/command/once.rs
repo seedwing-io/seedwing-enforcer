@@ -46,7 +46,7 @@ impl Once {
         let result = match dependencies {
             Err(err) => {
                 let msg = format!("{:?}", err);
-                NamesAreHard {
+                Outcome {
                     status: AggregatedResult::ConfigError(msg),
                     details: vec![],
                 }
@@ -62,12 +62,12 @@ impl Once {
                         }
                     }
                     if error {
-                        NamesAreHard {
+                        Outcome {
                             status: AggregatedResult::Rejected,
                             details: result,
                         }
                     } else {
-                        NamesAreHard {
+                        Outcome {
                             status: AggregatedResult::Accepted,
                             details: result,
                         }
@@ -75,7 +75,7 @@ impl Once {
                 }
                 Err(e) => {
                     let msg = format!("Error while scanning dependencies : {:?}", e);
-                    NamesAreHard {
+                    Outcome {
                         status: AggregatedResult::ConfigError(msg),
                         details: vec![],
                     }
@@ -127,7 +127,7 @@ impl Once {
 }
 
 #[derive(Debug, Serialize)]
-pub struct NamesAreHard {
+pub struct Outcome {
     pub status: AggregatedResult,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub details: Vec<PolicyResult>,

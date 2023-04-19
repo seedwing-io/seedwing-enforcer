@@ -1,8 +1,8 @@
-use crate::command::once::{AggregatedResult, NamesAreHard};
+use crate::command::once::{AggregatedResult, Outcome};
 use seedwing_policy_engine::lang::Severity;
 use seedwing_policy_engine::runtime::response::Collector;
 
-pub fn result_to_markdown(data: &NamesAreHard) -> String {
+pub fn result_to_markdown(data: &Outcome) -> String {
     let mut markdown = String::new();
 
     // Overall status and title
