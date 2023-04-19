@@ -18,8 +18,7 @@ pub struct Once {
     source: Option<PathBuf>,
     #[arg(short, long)]
     config: PathBuf,
-    #[arg(short, long, default_value_t = false)]
-    verbose: bool,
+    /// choose the output format
     #[arg(short, long, value_enum)]
     output: Output,
 }

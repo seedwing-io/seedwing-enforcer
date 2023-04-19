@@ -1,5 +1,6 @@
 use crate::command::lsp::Lsp;
 use crate::command::once::Once;
+use log::LevelFilter;
 
 #[derive(clap::Subcommand, Debug)]
 pub enum Command {
@@ -17,11 +18,26 @@ pub enum Command {
 pub struct Cli {
     #[command(subcommand)]
     pub(crate) command: Command,
+
+    /// Be quiet. Conflicts with 'verbose'.
+    #[arg(short, long, conflicts_with = "verbose", global = true)]
+    quiet: bool,
+    /// Be more verbose. May be repeated multiple times to increase verbosity.
+    #[arg(short, long, global = true, action = clap::ArgAction::Count)]
+    verbose: u8,
 }
 
 impl Cli {
     pub async fn run(self) -> anyhow::Result<()> {
-        env_logger::init();
+        let level = match (self.quiet, self.verbose) {
+            (true, _) => LevelFilter::Off,
+            (_, 0) => LevelFilter::Warn,
+            (_, 1) => LevelFilter::Info,
+            (_, 2) => LevelFilter::Debug,
+            (_, _) => LevelFilter::Trace,
+        };
+
+        env_logger::builder().filter_level(level).init();
 
         match self.command {
             Command::Lsp(command) => command.run().await,
