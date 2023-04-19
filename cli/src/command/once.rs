@@ -12,8 +12,9 @@ use serde::Serialize;
 use std::env::current_dir;
 use std::{fmt::Debug, path::PathBuf};
 
+/// Scan dependencies once
 #[derive(Args, Debug)]
-#[command(about = "Scan dependencies once", allow_external_subcommands = true)]
+#[command(allow_external_subcommands = true)]
 pub struct Once {
     /// The root of the project. Defaults to the current directory.
     #[arg(short, long)]

@@ -12,7 +12,7 @@ pub enum Command {
 #[command(
     author,
     version,
-    about="Seedwing Enforcer",
+    about = "Seedwing Enforcer",
     long_about = None
 )]
 pub struct Cli {
@@ -20,7 +20,7 @@ pub struct Cli {
     pub(crate) command: Command,
 
     /// Be quiet. Conflicts with 'verbose'.
-    #[arg(short, long, conflicts_with = "verbose", global = true)]
+    #[arg(short, long, global = true, action = clap::ArgAction::SetTrue, conflicts_with = "verbose")]
     quiet: bool,
     /// Be more verbose. May be repeated multiple times to increase verbosity.
     #[arg(short, long, global = true, action = clap::ArgAction::Count)]
