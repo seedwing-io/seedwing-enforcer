@@ -9,10 +9,10 @@ pub fn result_to_markdown(data: &NamesAreHard) -> String {
     markdown.push_str("# Seedwing Enforcer Dependency analysis\n\n");
 
     match &data.status {
-        AggregatedResult::Accepted => markdown.push_str("# ✔ Accepted ✔️\n"),
-        AggregatedResult::Rejected => markdown.push_str("# ❌ Rejected ❌\n"),
+        AggregatedResult::Accepted => markdown.push_str("✔ Accepted ✔️\n"),
+        AggregatedResult::Rejected => markdown.push_str("❌ Rejected ❌\n"),
         AggregatedResult::ConfigError(_) => {
-            markdown.push_str("# Configuration Error ❌\n");
+            markdown.push_str("Configuration Error ❌\n");
             return markdown;
         }
     }
