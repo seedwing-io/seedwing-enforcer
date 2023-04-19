@@ -1,7 +1,5 @@
 use crate::backend::project::publisher::{Category, DiagnosticPublisher};
-use seedwing_enforcer_common::{
-    config::FILE_NAME_YAML, enforcer::seedwing::Enforcer, utils::pool::Pool,
-};
+use seedwing_enforcer_common::{config::FILE_NAME_YAML, enforcer::Enforcer, utils::pool::Pool};
 use std::{
     collections::HashMap,
     ffi::OsStr,
@@ -55,7 +53,11 @@ impl Project {
     async fn initial_scan(&mut self) {
         let pom = self.root.join("pom.xml");
         if pom.is_file() {
-            let file = file::File::new(pom.clone(), self.client.clone(), self.enforcer.clone());
+            let file = file::File::new(
+                pom.clone(),
+                self.client.clone(),
+                self.enforcer.evaluator.clone(),
+            );
             log::info!("Initially adding: {}", pom.display());
             self.files.insert(pom, file);
         }
@@ -71,7 +73,11 @@ impl Project {
         } else if path.ends_with("pom.xml") {
             log::info!("Adding: {}", path.display());
             // FIXME: don't descend into sub-dirs, only root level pom
-            let mut file = file::File::new(path.into(), self.client.clone(), self.enforcer.clone());
+            let mut file = file::File::new(
+                path.into(),
+                self.client.clone(),
+                self.enforcer.evaluator.clone(),
+            );
             file.build(&mut self.publisher).await;
             self.files.insert(path.to_path_buf(), file);
         } else if path.ends_with(FILE_NAME_YAML) {

@@ -6,10 +6,9 @@ use crate::{
     },
     protocol::{commands::SHOW_REPORT, types::Report},
 };
-use seedwing_enforcer_common::enforcer::seedwing::render::ResponseRenderer;
 use seedwing_enforcer_common::{
     enforcer::{
-        seedwing::{self, Enforcer},
+        seedwing::{self, render::ResponseRenderer, Evaluator},
         source::{
             sbom::{maven::MavenGenerator, SBOM},
             Source,
@@ -47,7 +46,7 @@ pub enum Error {
 #[derive(Debug)]
 pub struct File {
     path: PathBuf,
-    enforcer: Enforcer,
+    enforcer: Evaluator,
     client: Client,
 
     dependencies: Vec<Dependency>,
@@ -55,7 +54,7 @@ pub struct File {
 }
 
 impl File {
-    pub fn new(path: PathBuf, client: Client, enforcer: Enforcer) -> Self {
+    pub fn new(path: PathBuf, client: Client, enforcer: Evaluator) -> Self {
         Self {
             path,
             enforcer,

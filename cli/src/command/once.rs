@@ -1,13 +1,12 @@
 use crate::util::result_to_markdown;
 use anyhow::{bail, Result};
 use clap::{Args, ValueEnum};
-use seedwing_enforcer_common::config::Config;
 use seedwing_enforcer_common::{
-    enforcer::{seedwing::Enforcer, source::AutoSource, Dependency},
+    config::Config,
+    enforcer::{source::AutoSource, Dependency, Enforcer},
     utils::{pool::Pool, progress::NoProgress},
 };
-use seedwing_policy_engine::lang::Severity;
-use seedwing_policy_engine::runtime::Response;
+use seedwing_policy_engine::{lang::Severity, runtime::Response};
 use serde::Serialize;
 use std::env::current_dir;
 use std::{fmt::Debug, path::PathBuf};
@@ -39,9 +38,7 @@ impl Once {
             .await
             .expect("invalid enforcer configuration");
 
-        let config = enforcer.get_config().await;
-
-        let dependencies = self.get_deps(config).await;
+        let dependencies = self.get_deps(enforcer.config.transpose()?).await;
 
         let result = match dependencies {
             Err(err) => {
@@ -51,7 +48,7 @@ impl Once {
                     details: vec![],
                 }
             }
-            Ok(dependencies) => match enforcer.eval(dependencies, NoProgress).await {
+            Ok(dependencies) => match enforcer.evaluator.eval(dependencies, NoProgress).await {
                 Ok(scan) => {
                     let mut error = false;
                     let mut result = Vec::new();

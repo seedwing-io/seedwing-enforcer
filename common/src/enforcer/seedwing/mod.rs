@@ -50,11 +50,11 @@ pub enum Error {
 }
 
 #[derive(Clone, Debug)]
-pub struct Enforcer {
+pub struct Evaluator {
     inner: Arc<RwLock<Inner>>,
 }
 
-impl Enforcer {
+impl Evaluator {
     pub async fn new(root: impl Into<PathBuf>, pool: Pool) -> Self {
         let mut inner = Inner {
             root: root.into(),
@@ -67,6 +67,7 @@ impl Enforcer {
             inner: Arc::new(RwLock::new(inner)),
         }
     }
+
     /// Read the enforcer configuration
     pub async fn get_config(&self) -> Option<Config> {
         self.inner.read().await.get_config()
