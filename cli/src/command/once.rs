@@ -19,7 +19,7 @@ pub struct Once {
     #[arg(short, long)]
     config: PathBuf,
     /// choose the output format
-    #[arg(short, long, value_enum)]
+    #[arg(short, long, value_enum, default_value_t = Output::Markdown)]
     output: Output,
 }
 
