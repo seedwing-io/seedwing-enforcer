@@ -18,12 +18,7 @@ use lsp_types::{Diagnostic, DiagnosticSeverity};
 use ropey::Rope;
 use seedwing_policy_engine::{
     lang::builder::Builder,
-<<<<<<< HEAD:common/src/enforcer/seedwing.rs
-    lang::Severity,
-    runtime::{sources::Ephemeral, BuildError, RuntimeError, World},
-=======
     runtime::{sources::Ephemeral, BuildError, Response, RuntimeError, World},
->>>>>>> 61cc36f (feat: make use of response, collect and render in simpler form):common/src/enforcer/seedwing/mod.rs
     value::{self, RuntimeValue},
 };
 use std::{
@@ -260,24 +255,8 @@ impl<P: Progress, C: Cache> Runner<P, C> {
                 None => {
                     let input: RuntimeValue = d.clone().try_into()?;
                     let evaluation = world.evaluate(&requires, input, Default::default()).await?;
-<<<<<<< HEAD:common/src/enforcer/seedwing.rs
-                    let outcome = match evaluation.severity() {
-                        Severity::Error => match self.config.enforcer.rationale {
-                            RationaleVariant::Html => {
-                                let rationale = Rationalizer::new(&evaluation).rationale_html();
-                                Outcome::RejectedHtml(rationale)
-                            }
-                            RationaleVariant::Raw => {
-                                Outcome::RejectedRaw(Response::new(&evaluation))
-                            }
-                        },
-                        _ => Outcome::Ok,
-                    };
-=======
                     let response = Response::new(&evaluation);
                     self.cache.store(&d, response.clone());
->>>>>>> 61cc36f (feat: make use of response, collect and render in simpler form):common/src/enforcer/seedwing/mod.rs
-
                     outcomes.push((d, response));
                 }
             }
